@@ -1,6 +1,89 @@
-@GoodHamburger.Api_HostAddress = http://localhost:5114
+@host = http://localhost:5000
 
-GET {{GoodHamburger.Api_HostAddress}}/weatherforecast/
+### Listar cardápio
+GET {{host}}/menu
 Accept: application/json
+
+###
+
+### Criar pedido — combo completo (20% desconto)
+POST {{host}}/orders
+Content-Type: application/json
+
+{
+  "productIds": [
+    "11111111-0000-0000-0000-000000000001",
+    "11111111-0000-0000-0000-000000000004",
+    "11111111-0000-0000-0000-000000000005"
+  ]
+}
+
+###
+
+### Criar pedido — sanduíche + refrigerante (15% desconto)
+POST {{host}}/orders
+Content-Type: application/json
+
+{
+  "productIds": [
+    "11111111-0000-0000-0000-000000000001",
+    "11111111-0000-0000-0000-000000000005"
+  ]
+}
+
+###
+
+### Criar pedido — sanduíche + batata (10% desconto)
+POST {{host}}/orders
+Content-Type: application/json
+
+{
+  "productIds": [
+    "11111111-0000-0000-0000-000000000001",
+    "11111111-0000-0000-0000-000000000004"
+  ]
+}
+
+###
+
+### Listar todos os pedidos
+GET {{host}}/orders
+Accept: application/json
+
+###
+
+### Buscar pedido por ID (substituir pelo ID retornado no POST)
+GET {{host}}/orders/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+###
+
+### Atualizar pedido (substituir pelo ID retornado no POST)
+PUT {{host}}/orders/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "productIds": [
+    "11111111-0000-0000-0000-000000000003"
+  ]
+}
+
+###
+
+### Remover pedido (substituir pelo ID retornado no POST)
+DELETE {{host}}/orders/00000000-0000-0000-0000-000000000000
+
+###
+
+### Erro — categoria duplicada
+POST {{host}}/orders
+Content-Type: application/json
+
+{
+  "productIds": [
+    "11111111-0000-0000-0000-000000000001",
+    "11111111-0000-0000-0000-000000000002"
+  ]
+}
 
 ###
