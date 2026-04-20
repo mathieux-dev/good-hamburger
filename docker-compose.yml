@@ -1,5 +1,6 @@
 services:
   api:
+    container_name: goodhamburger-api
     build: .
     ports:
       - "5000:8080"
@@ -11,6 +12,7 @@ services:
         condition: service_healthy
 
   web:
+    container_name: goodhamburger-web
     build:
       context: .
       dockerfile: src/Web/Dockerfile
@@ -23,6 +25,7 @@ services:
       - api
 
   db:
+    container_name: goodhamburger-db
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: goodhamburger
