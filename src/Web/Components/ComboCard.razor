@@ -1,0 +1,27 @@
+@* ComboCard.razor — cards de combo com desconto *@
+
+<div class="combo-card @(Active ? "active" : "")"
+     @onclick="() => OnApply.InvokeAsync(Combo)">
+    <div class="badge-circle">
+        <div class="display-md">-@Combo.Discount</div>
+        <div class="condensed tiny">%OFF</div>
+    </div>
+    <div class="tag condensed tiny upper">@Combo.Tag</div>
+    <h3 class="display-md">@Combo.Title</h3>
+    <div class="combo-items">
+        @foreach (var item in Combo.Items)
+        {
+            <span class="pill">@item</span>
+        }
+    </div>
+    <div class="dash"></div>
+    <div class="mono tiny upper">
+        @(Active ? "✓ ATIVO NO PEDIDO" : "TOQUE PARA MONTAR")
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ComboDefinition Combo { get; set; } = default!;
+    [Parameter] public bool Active { get; set; }
+    [Parameter] public EventCallback<ComboDefinition> OnApply { get; set; }
+}

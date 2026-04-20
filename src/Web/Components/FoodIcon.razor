@@ -1,0 +1,55 @@
+@* FoodIcon.razor — ilustrações SVG retrô dos itens *@
+
+@switch (Kind)
+{
+    case "burger":
+        <svg width="@Size" height="@Size" viewBox="0 0 80 80" fill="none">
+            <ellipse cx="40" cy="22" rx="28" ry="12" fill="#d4a537" stroke="#1a1410" stroke-width="2.5"/>
+            <circle cx="30" cy="18" r="1.2" fill="#1a1410"/>
+            <circle cx="42" cy="15" r="1.2" fill="#1a1410"/>
+            <circle cx="50" cy="19" r="1.2" fill="#1a1410"/>
+            <path d="M12 30 Q40 42 68 30 L68 34 Q40 46 12 34 Z" fill="#2a6b47" stroke="#1a1410" stroke-width="2"/>
+            <rect x="12" y="34" width="56" height="8" fill="#b83a2e" stroke="#1a1410" stroke-width="2"/>
+            <path d="M10 42 Q40 50 70 42 L68 50 Q40 56 12 50 Z" fill="#d4a537" stroke="#1a1410" stroke-width="2.5"/>
+            <ellipse cx="40" cy="58" rx="30" ry="10" fill="#c9963a" stroke="#1a1410" stroke-width="2.5"/>
+        </svg>
+        break;
+    case "egg":
+        <svg width="@Size" height="@Size" viewBox="0 0 80 80" fill="none">
+            <ellipse cx="40" cy="22" rx="28" ry="12" fill="#d4a537" stroke="#1a1410" stroke-width="2.5"/>
+            <path d="M14 30 Q40 38 66 30 L68 34 Q40 42 12 34 Z" fill="#f7efd7" stroke="#1a1410" stroke-width="2"/>
+            <circle cx="32" cy="30" r="6" fill="#d4a537" stroke="#1a1410" stroke-width="2"/>
+            <rect x="12" y="36" width="56" height="8" fill="#b83a2e" stroke="#1a1410" stroke-width="2"/>
+            <ellipse cx="40" cy="60" rx="30" ry="10" fill="#c9963a" stroke="#1a1410" stroke-width="2.5"/>
+        </svg>
+        break;
+    case "bacon":
+        <svg width="@Size" height="@Size" viewBox="0 0 80 80" fill="none">
+            <ellipse cx="40" cy="22" rx="28" ry="12" fill="#d4a537" stroke="#1a1410" stroke-width="2.5"/>
+            <path d="M10 30 Q40 40 70 30 L68 38 Q40 46 12 38 Z" fill="#b83a2e" stroke="#1a1410" stroke-width="2"/>
+            <rect x="12" y="38" width="56" height="8" fill="#8f2b21" stroke="#1a1410" stroke-width="2"/>
+            <ellipse cx="40" cy="60" rx="30" ry="10" fill="#c9963a" stroke="#1a1410" stroke-width="2.5"/>
+        </svg>
+        break;
+    case "fries":
+        <svg width="@Size" height="@Size" viewBox="0 0 80 80" fill="none">
+            <path d="M22 18 L26 18 L28 56 L20 56 Z" fill="#d4a537" stroke="#1a1410" stroke-width="2"/>
+            <path d="M30 14 L34 14 L36 58 L28 58 Z" fill="#e8b947" stroke="#1a1410" stroke-width="2"/>
+            <path d="M38 12 L42 12 L44 60 L36 60 Z" fill="#d4a537" stroke="#1a1410" stroke-width="2"/>
+            <path d="M46 16 L50 16 L52 58 L44 58 Z" fill="#e8b947" stroke="#1a1410" stroke-width="2"/>
+            <path d="M14 42 L66 42 L62 72 L18 72 Z" fill="#b83a2e" stroke="#1a1410" stroke-width="2.5"/>
+        </svg>
+        break;
+    case "soda":
+        <svg width="@Size" height="@Size" viewBox="0 0 80 80" fill="none">
+            <path d="M24 16 L56 16 L52 70 L28 70 Z" fill="#b83a2e" stroke="#1a1410" stroke-width="2.5"/>
+            <rect x="22" y="14" width="36" height="6" fill="#8f2b21" stroke="#1a1410" stroke-width="2"/>
+            <rect x="30" y="26" width="20" height="22" fill="#f7efd7" stroke="#1a1410" stroke-width="2"/>
+        </svg>
+        break;
+}
+
+@code {
+    [Parameter] public string Kind { get; set; } = "burger";
+    [Parameter] public int Size { get; set; } = 60;
+}

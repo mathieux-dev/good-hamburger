@@ -1,0 +1,188 @@
+@page "/order"
+@page "/order/{EditId}"
+@inject IMenuService MenuService
+@inject IOrderService OrderService
+@inject NavigationManager Nav
+
+<PageTitle>Novo pedido · Good Hamburger</PageTitle>
+
+<div class="page-header">
+    <div class="crumb">Home / <b>Novo pedido</b></div>
+    <h1 class="display-lg">Montar pedido</h1>
+    <p class="subtitle">Escolha um sanduíche, um acompanhamento e uma bebida. Combine pra economizar.</p>
+</div>
+
+@if (_loading)
+{
+    <div class="skeleton-grid">
+        @for (var i = 0; i < 5; i++) { <div class="skeleton-card"></div> }
+    </div>
+}
+else if (_menu is null)
+{
+    <div class="alert">Não foi possível carregar o cardápio.</div>
+}
+else
+{
+    <div class="order-layout">
+        <div class="order-main">
+            <section class="combos">
+                <ComboCard Combo="Combos.Full"    Active="@IsComboActive("full")"    OnApply="ApplyCombo" />
+                <ComboCard Combo="Combos.SandRef" Active="@IsComboActive("sand-ref")" OnApply="ApplyCombo" />
+                <ComboCard Combo="Combos.SandBat" Active="@IsComboActive("sand-bat")" OnApply="ApplyCombo" />
+            </section>
+
+            <section class="menu-section">
+                <h2 class="display-md">Sanduíches</h2>
+                <div class="menu-grid">
+                    @foreach (var item in _menu.Where(m => m.Category == Category.Sandwich))
+                    {
+                        <MenuItemCard Item="item"
+                                      Selected="@_current.Any(i => i.Id == item.Id)"
+                                      OnToggle="ToggleItem" />
+                    }
+                </div>
+            </section>
+
+            <section class="menu-section">
+                <h2 class="display-md">Pra acompanhar</h2>
+                <div class="menu-grid">
+                    @foreach (var item in _menu.Where(m => m.Category != Category.Sandwich))
+                    {
+                        <MenuItemCard Item="item"
+                                      Selected="@_current.Any(i => i.Id == item.Id)"
+                                      OnToggle="ToggleItem" />
+                    }
+                </div>
+            </section>
+        </div>
+
+        <aside class="order-aside">
+            <OrderCart Items="@_current"
+                       Customer="@_customer"
+                       CustomerChanged="v => _customer = v"
+                       Note="@_note"
+                       NoteChanged="v => _note = v"
+                       Error="@_error"
+                       OnDismissError="() => _error = null"
+                       OnRemove="RemoveItem"
+                       OnSubmit="SubmitAsync"
+                       EditingId="@EditId" />
+        </aside>
+    </div>
+}
+
+@code {
+    [Parameter] public string? EditId { get; set; }
+
+    private List<MenuItemDto>? _menu;
+    private List<MenuItemDto> _current = new();
+    private string _customer = "";
+    private string _note = "";
+    private string? _error;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _menu = await MenuService.GetMenuAsync();
+        _loading = false;
+
+        if (!string.IsNullOrEmpty(EditId))
+        {
+            var existing = await OrderService.GetAsync(EditId);
+            if (existing is not null)
+            {
+                _current = existing.Items.ToList();
+                _customer = existing.Customer;
+                _note = existing.Note;
+            }
+        }
+    }
+
+    private bool IsComboActive(string comboId)
+    {
+        var cats = _current.Select(i => i.Category).Distinct().ToHashSet();
+        return comboId switch
+        {
+            "full"     => cats.Contains(Category.Sandwich) && cats.Contains(Category.Side) && cats.Contains(Category.Drink),
+            "sand-ref" => cats.Contains(Category.Sandwich) && cats.Contains(Category.Drink),
+            "sand-bat" => cats.Contains(Category.Sandwich) && cats.Contains(Category.Side),
+            _ => false
+        };
+    }
+
+    private void ToggleItem(MenuItemDto item)
+    {
+        _error = null;
+
+        // Se já está no carrinho, remove
+        var existing = _current.FirstOrDefault(i => i.Id == item.Id);
+        if (existing is not null)
+        {
+            _current.Remove(existing);
+            return;
+        }
+
+        // Se já tem outro item da mesma categoria, avisa (regra do desafio)
+        var sameCategory = _current.FirstOrDefault(i => i.Category == item.Category);
+        if (sameCategory is not null)
+        {
+            _error = $"Já tem 1 {item.Category.Label().ToLower()} no pedido ({sameCategory.Name}). Remova antes de adicionar outro.";
+            return;
+        }
+
+        _current.Add(item);
+    }
+
+    private void RemoveItem(MenuItemDto item)
+    {
+        _current.Remove(item);
+        _error = null;
+    }
+
+    private void ApplyCombo(ComboDefinition combo)
+    {
+        if (_menu is null) return;
+        _current = combo.ItemIds
+            .Select(id => _menu.FirstOrDefault(m => m.Id == id))
+            .Where(x => x is not null)
+            .Cast<MenuItemDto>()
+            .ToList();
+        _error = null;
+    }
+
+    private async Task SubmitAsync()
+    {
+        var (ok, err) = OrderService.ValidateLocal(_current);
+        if (!ok) { _error = err; return; }
+
+        var req = new OrderRequest
+        {
+            Customer = string.IsNullOrWhiteSpace(_customer) ? "Balcão" : _customer,
+            Note = _note,
+            Items = _current.Select(i => i.Id).ToList()
+        };
+
+        try
+        {
+            if (!string.IsNullOrEmpty(EditId))
+            {
+                await OrderService.UpdateAsync(EditId, req);
+                Nav.NavigateTo($"/order/{EditId}/ticket");
+            }
+            else
+            {
+                var created = await OrderService.CreateAsync(req);
+                Nav.NavigateTo($"/ticket/{created.Id}");
+            }
+        }
+        catch (ApiException ex)
+        {
+            _error = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            _error = $"Erro inesperado: {ex.Message}";
+        }
+    }
+}

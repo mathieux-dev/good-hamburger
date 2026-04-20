@@ -1,0 +1,19 @@
+@* StatusBadge.razor *@
+
+<span class="status-badge status-@Status">
+    <span class="dot"></span>
+    @Label
+</span>
+
+@code {
+    [Parameter] public string Status { get; set; } = "preparando";
+
+    private string Label => Status switch
+    {
+        "preparando" => "Preparando",
+        "pronto"     => "Pronto",
+        "entregue"   => "Entregue",
+        "cancelado"  => "Cancelado",
+        _            => Status
+    };
+}

@@ -1,0 +1,32 @@
+@* MenuItemCard.razor — card de item do cardápio *@
+
+<div class="menu-item-card @(Selected ? "selected" : "")"
+     @onclick="() => OnToggle.InvokeAsync(Item)">
+    <div class="thumb">
+        <FoodIcon Kind="@Item.Placeholder" />
+    </div>
+    <div class="info">
+        <div class="display-sm">@Item.Name</div>
+        <div class="mono tiny muted upper">@Item.Subtitle</div>
+        <div class="price-tag">@Item.Price.ToString("C")</div>
+    </div>
+    <div class="dash"></div>
+    <div class="foot">
+        <span class="condensed tiny muted">
+            @(Item.Description.Length > 40 ? Item.Description.Substring(0, 40) + "…" : Item.Description)
+        </span>
+        <div class="toggle-dot @(Selected ? "on" : "")">
+            @(Selected ? "✓" : "+")
+        </div>
+    </div>
+    @if (Selected)
+    {
+        <span class="stamp stamp-green in-order">No pedido</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MenuItemDto Item { get; set; } = default!;
+    [Parameter] public bool Selected { get; set; }
+    [Parameter] public EventCallback<MenuItemDto> OnToggle { get; set; }
+}

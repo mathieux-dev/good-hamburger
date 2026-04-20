@@ -1,0 +1,130 @@
+@* OrderCart.razor — comanda lateral com totais reativos *@
+
+<div class="cart">
+    <header class="cart-head">
+        <div>
+            <div class="mono tiny muted">COMANDA Nº</div>
+            <div class="display-md">@(EditingId ?? "#1043")</div>
+        </div>
+        <div class="right">
+            <div class="mono tiny muted">@DateTime.Now.ToString("dd/MM/yyyy")</div>
+            <div class="mono tiny muted">@DateTime.Now.ToString("HH:mm")</div>
+        </div>
+    </header>
+
+    <div class="field">
+        <label>Cliente / Mesa</label>
+        <input class="mono dashed-input"
+               @bind="_customer" @bind:event="oninput"
+               placeholder="Mesa 01, Balcão, Delivery..." />
+    </div>
+
+    @if (!string.IsNullOrEmpty(Error))
+    {
+        <div class="error-banner">
+            <span class="icon">⚠</span>
+            <div>
+                <div class="condensed tiny upper">Item Duplicado</div>
+                <div>@Error</div>
+            </div>
+            <button @onclick="() => OnDismissError.InvokeAsync()">×</button>
+        </div>
+    }
+
+    <div class="cart-items">
+        @if (!Items.Any())
+        {
+            <div class="empty-cart">
+                <div class="display-sm">COMANDA VAZIA</div>
+                <div class="mono tiny">Toque em um item para começar</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in Items)
+            {
+                <div class="cart-row" @key="item.Id">
+                    <div class="cart-thumb">
+                        <FoodIcon Kind="@item.Placeholder" Size="32" />
+                    </div>
+                    <div class="cart-info">
+                        <div class="display-sm">@item.Name</div>
+                        <div class="mono tiny muted upper">@item.Category.Label()</div>
+                    </div>
+                    <div class="mono">@item.Price.ToString("C")</div>
+                    <button class="remove-dot" @onclick="() => OnRemove.InvokeAsync(item)">×</button>
+                </div>
+            }
+        }
+    </div>
+
+    @if (Items.Any())
+    {
+        <div class="field">
+            <label>Observação</label>
+            <textarea class="mono note-input"
+                      @bind="_note" @bind:event="oninput"
+                      placeholder="Sem cebola, ponto da carne..."></textarea>
+        </div>
+
+        <div class="dash"></div>
+        <div class="totals mono">
+            <div class="row">
+                <span>Subtotal</span>
+                <span>@_summary.Subtotal.ToString("C")</span>
+            </div>
+            @if (_summary.Rule is not null)
+            {
+                <div class="row discount">
+                    <span>Desconto · @_summary.Rule.Label</span>
+                    <span>- @_summary.Discount.ToString("C")</span>
+                </div>
+                <div class="discount-note">
+                    @((_summary.Rule.Rate * 100).ToString("0"))% OFF APLICADO
+                </div>
+            }
+        </div>
+        <div class="total-box">
+            <span class="display-sm">TOTAL</span>
+            <span class="display-lg red">@_summary.Total.ToString("C")</span>
+        </div>
+    }
+
+    <button class="btn btn-green btn-lg full"
+            disabled="@(!Items.Any())"
+            @onclick="() => OnSubmit.InvokeAsync()">
+        @(string.IsNullOrEmpty(EditingId) ? "🍔 Enviar pedido" : "💾 Salvar alterações")
+    </button>
+</div>
+
+@code {
+    [Parameter] public List<MenuItemDto> Items { get; set; } = new();
+    [Parameter] public string Customer { get; set; } = "";
+    [Parameter] public EventCallback<string> CustomerChanged { get; set; }
+    [Parameter] public string Note { get; set; } = "";
+    [Parameter] public EventCallback<string> NoteChanged { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public EventCallback OnDismissError { get; set; }
+    [Parameter] public EventCallback<MenuItemDto> OnRemove { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public string? EditingId { get; set; }
+
+    private DiscountCalculator.Summary _summary = new(0, null, 0, 0);
+
+    // Bindings locais (sincronizam com o pai via @bind)
+    private string _customer
+    {
+        get => Customer;
+        set { Customer = value; CustomerChanged.InvokeAsync(value); }
+    }
+    private string _note
+    {
+        get => Note;
+        set { Note = value; NoteChanged.InvokeAsync(value); }
+    }
+
+    protected override void OnParametersSet()
+    {
+        _summary = DiscountCalculator.Summarize(Items);
+    }
+}

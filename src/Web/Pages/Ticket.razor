@@ -1,0 +1,87 @@
+@page "/ticket/{Id}"
+@inject IOrderService OrderService
+@inject NavigationManager Nav
+
+<PageTitle>Pedido @Id · Good Hamburger</PageTitle>
+
+@if (_order is null)
+{
+    <div class="skeleton-ticket"></div>
+}
+else
+{
+    <div class="ticket-backdrop">
+        <div class="ticket">
+            <header class="ticket-head">
+                <div class="display-md">GOOD</div>
+                <div class="display-md red">HAMBURGER</div>
+                <div class="mono small">R. DAS PERDIZES, 1914 · SÃO PAULO</div>
+                <div class="dash"></div>
+                <div class="mono small">PEDIDO @_order.Id · @_order.CreatedAt</div>
+                <div class="mono">@(string.IsNullOrWhiteSpace(_order.Customer) ? "Balcão" : _order.Customer)</div>
+            </header>
+
+            <div class="ticket-body">
+                @foreach (var i in _order.Items)
+                {
+                    <div class="row mono">
+                        <span>1x @i.Name</span>
+                        <span>@i.Price.ToString("C")</span>
+                    </div>
+                }
+
+                <div class="dash"></div>
+
+                <div class="row mono">
+                    <span>Subtotal</span>
+                    <span>@_order.Subtotal.ToString("C")</span>
+                </div>
+                @if (_order.DiscountRate > 0)
+                {
+                    <div class="row mono discount">
+                        <span>Desconto (@((_order.DiscountRate * 100).ToString("0"))%)</span>
+                        <span>-@_order.DiscountAmount.ToString("C")</span>
+                    </div>
+                }
+
+                <div class="ticket-total">
+                    <span class="display-sm">TOTAL</span>
+                    <span class="display-md red">@_order.Total.ToString("C")</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_order.Note))
+                {
+                    <div class="note-box">
+                        <div class="label">OBS:</div>
+                        <div class="mono">@_order.Note</div>
+                    </div>
+                }
+
+                <div class="stamp-wrap">
+                    <div class="stamp stamp-green">✓ RECEBIDO</div>
+                </div>
+
+                <div class="mono tiny center">OBRIGADO! VOLTE SEMPRE 🍔</div>
+            </div>
+
+            <svg class="tear" viewBox="0 0 340 14" preserveAspectRatio="none">
+                <polygon points="0,0 340,0 340,4 330,14 320,4 310,14 300,4 290,14 280,4 270,14 260,4 250,14 240,4 230,14 220,4 210,14 200,4 190,14 180,4 170,14 160,4 150,14 140,4 130,14 120,4 110,14 100,4 90,14 80,4 70,14 60,4 50,14 40,4 30,14 20,4 10,14 0,4" />
+            </svg>
+        </div>
+
+        <div class="ticket-actions">
+            <button class="btn btn-dark" @onclick='() => Nav.NavigateTo("/admin")'>Ver pedidos</button>
+            <button class="btn btn-primary" @onclick='() => Nav.NavigateTo("/order")'>Novo pedido</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    private OrderDto? _order;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _order = await OrderService.GetAsync(Id);
+    }
+}

@@ -1,0 +1,158 @@
+@page "/admin"
+@inject IOrderService OrderService
+@inject NavigationManager Nav
+
+<PageTitle>Pedidos · Good Hamburger</PageTitle>
+
+<div class="page-header">
+    <div class="crumb">Home / <b>Pedidos</b></div>
+    <div class="header-row">
+        <h1 class="display-lg">Pedidos de hoje</h1>
+        <div class="revenue-card">
+            <div class="label">FATURAMENTO</div>
+            <div class="display-md">@_totalDia.ToString("C")</div>
+        </div>
+    </div>
+</div>
+
+<div class="filters">
+    @foreach (var (key, label) in _filters)
+    {
+        <button class="filter-tab @(_filter == key ? "active" : "")"
+                @onclick="() => _filter = key">
+            @label
+            <span class="count">@CountFor(key)</span>
+        </button>
+    }
+    <input class="search"
+           placeholder="🔍 Buscar por # ou cliente..."
+           @bind="_search"
+           @bind:event="oninput" />
+</div>
+
+@if (_loading)
+{
+    <div class="skeleton-grid">
+        @for (var i = 0; i < 4; i++) { <div class="skeleton-card tall"></div> }
+    </div>
+}
+else if (!Filtered.Any())
+{
+    <div class="empty-state">
+        <h2 class="display-md">Nenhum pedido por aqui</h2>
+        <p class="mono">AJUSTE OS FILTROS OU AGUARDE O PRÓXIMO.</p>
+    </div>
+}
+else
+{
+    <div class="orders-grid">
+        @foreach (var order in Filtered)
+        {
+            <article class="order-card" @key="order.Id">
+                <header>
+                    <div>
+                        <div class="mono small">@order.CreatedAt · @order.Customer</div>
+                        <h3 class="display-md">@order.Id</h3>
+                    </div>
+                    <StatusBadge Status="@order.Status" />
+                </header>
+
+                <div class="order-items">
+                    @foreach (var item in order.Items)
+                    {
+                        <div class="order-row">
+                            <span>1x @item.Name</span>
+                            <span class="mono">@item.Price.ToString("C")</span>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(order.Note))
+                {
+                    <div class="note-box">
+                        <div class="label">OBS.</div>
+                        <div class="mono">@order.Note</div>
+                    </div>
+                }
+
+                <footer>
+                    @if (order.DiscountRate > 0)
+                    {
+                        <div>
+                            <div class="mono small strike">@order.Subtotal.ToString("C")</div>
+                            <div class="discount-label">@((order.DiscountRate * 100).ToString("0"))% · @order.DiscountLabel</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mono small muted">SEM DESCONTO</div>
+                    }
+                    <div class="total-red">@order.Total.ToString("C")</div>
+                </footer>
+
+                <div class="order-actions">
+                    <button class="btn btn-ghost btn-sm" @onclick="() => EditOrder(order)">✎ Editar</button>
+                    <select class="btn btn-dark btn-sm" @onchange="e => ChangeStatus(order.Id, e.Value!.ToString()!)">
+                        <option>Status ▾</option>
+                        <option value="preparando">Preparando</option>
+                        <option value="pronto">Pronto</option>
+                        <option value="entregue">Entregue</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                    <button class="btn btn-ghost btn-sm btn-danger" @onclick="() => DeleteAsync(order.Id)">🗑</button>
+                </div>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    private List<OrderDto> _orders = new();
+    private string _filter = "todos";
+    private string _search = "";
+    private bool _loading = true;
+    private decimal _totalDia;
+
+    private readonly (string, string)[] _filters = new[]
+    {
+        ("todos", "Todos"),
+        ("preparando", "Preparando"),
+        ("pronto", "Prontos"),
+        ("entregue", "Entregues"),
+        ("cancelado", "Cancelados"),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await OrderService.ListAsync();
+        _totalDia = _orders.Where(o => o.Status != "cancelado").Sum(o => o.Total);
+        _loading = false;
+    }
+
+    private int CountFor(string f) => f == "todos"
+        ? _orders.Count
+        : _orders.Count(o => o.Status == f);
+
+    private IEnumerable<OrderDto> Filtered => _orders.Where(o =>
+        (_filter == "todos" || o.Status == _filter) &&
+        (string.IsNullOrEmpty(_search) ||
+         o.Id.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+         o.Customer.Contains(_search, StringComparison.OrdinalIgnoreCase))
+    );
+
+    private void EditOrder(OrderDto o) => Nav.NavigateTo($"/order/{o.Id}");
+
+    private async Task ChangeStatus(string id, string status)
+    {
+        // Num cenário real, PUT /api/orders/{id}/status — aqui simplifico:
+        var order = _orders.First(o => o.Id == id);
+        order.Status = status;
+        await Task.CompletedTask;
+    }
+
+    private async Task DeleteAsync(string id)
+    {
+        await OrderService.DeleteAsync(id);
+        _orders = _orders.Where(o => o.Id != id).ToList();
+    }
+}

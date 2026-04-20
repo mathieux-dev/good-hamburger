@@ -1,0 +1,19 @@
+@implements IDisposable
+@inject NavigationManager Nav
+
+<div class="signalr-badge @(_connected ? "ok" : "bad")">
+    <span class="dot"></span>
+    <span class="mono">SIGNALR · @(_connected ? "LIVE" : "RECONN.")</span>
+</div>
+
+@code {
+    private bool _connected = true;
+
+    protected override void OnInitialized()
+    {
+        // Em Blazor Server, a conexão SignalR é gerenciada pelo circuit handler.
+        // Aqui só exibimos — o reconnect-ui nativo do Blazor cuida do real.
+    }
+
+    public void Dispose() { }
+}
