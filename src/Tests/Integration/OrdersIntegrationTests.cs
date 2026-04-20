@@ -61,14 +61,16 @@ public class OrdersIntegrationTests : IAsyncLifetime
 
         var response = await _client.PostAsJsonAsync("/orders", new
         {
-            productIds = new[] { sandwich.Id, side.Id, drink.Id }
+            customer = "Test",
+            note = "",
+            items = new[] { sandwich.Id, side.Id, drink.Id }
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var order = await response.Content.ReadFromJsonAsync<OrderDto>();
         order!.Items.Should().HaveCount(3);
-        order.Discount.Should().Be(order.Subtotal * 0.20m);
-        order.Total.Should().Be(order.Subtotal - order.Discount);
+        order.DiscountAmount.Should().Be(order.Subtotal * 0.20m);
+        order.Total.Should().Be(order.Subtotal - order.DiscountAmount);
     }
 
     [Fact]
@@ -79,7 +81,9 @@ public class OrdersIntegrationTests : IAsyncLifetime
 
         var response = await _client.PostAsJsonAsync("/orders", new
         {
-            productIds = new[] { sandwiches[0].Id, sandwiches[1].Id }
+            customer = "Test",
+            note = "",
+            items = new[] { sandwiches[0].Id, sandwiches[1].Id }
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -93,7 +97,9 @@ public class OrdersIntegrationTests : IAsyncLifetime
 
         var created = await _client.PostAsJsonAsync("/orders", new
         {
-            productIds = new[] { sandwich.Id }
+            customer = "Test",
+            note = "",
+            items = new[] { sandwich.Id }
         });
         var order = await created.Content.ReadFromJsonAsync<OrderDto>();
 
@@ -110,7 +116,9 @@ public class OrdersIntegrationTests : IAsyncLifetime
 
         var created = await _client.PostAsJsonAsync("/orders", new
         {
-            productIds = new[] { sandwich.Id }
+            customer = "Test",
+            note = "",
+            items = new[] { sandwich.Id }
         });
         var order = await created.Content.ReadFromJsonAsync<OrderDto>();
 
