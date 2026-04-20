@@ -55,7 +55,7 @@ public class OrdersController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateOrderRequest request, CancellationToken ct)
     {
-        var result = await _updateHandler.HandleAsync(new UpdateOrderCommand(id, request.ProductIds), ct);
+        var result = await _updateHandler.HandleAsync(new UpdateOrderCommand(id, request.Customer, request.Note, request.Items), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
     }
 
@@ -67,4 +67,4 @@ public class OrdersController : ControllerBase
     }
 }
 
-public record UpdateOrderRequest(IEnumerable<Guid> ProductIds);
+public record UpdateOrderRequest(string Customer, string Note, IEnumerable<Guid> Items);
