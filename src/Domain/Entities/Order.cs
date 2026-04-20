@@ -9,19 +9,32 @@ public class Order
     private readonly List<OrderItem> _items = new();
 
     public Guid Id { get; private set; }
+    public string Customer { get; private set; } = "Balcão";
+    public string Note { get; private set; } = string.Empty;
+    public string Status { get; private set; } = "preparando";
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
     public decimal Subtotal { get; private set; }
     public decimal Discount { get; private set; }
+    public decimal DiscountRate { get; private set; }
     public decimal Total { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
     private Order() { }
 
-    public static Order Create() => new()
+    public static Order Create(string customer = "Balcão", string note = "") => new()
     {
         Id = Guid.NewGuid(),
-        CreatedAt = DateTime.UtcNow
+        CreatedAt = DateTime.UtcNow,
+        Customer = string.IsNullOrWhiteSpace(customer) ? "Balcão" : customer,
+        Note = note,
+        Status = "preparando"
     };
+
+    public void Update(string customer, string note)
+    {
+        Customer = string.IsNullOrWhiteSpace(customer) ? "Balcão" : customer;
+        Note = note;
+    }
 
     public Result AddItem(Product product, IEnumerable<IDiscountStrategy> strategies)
     {
@@ -68,6 +81,7 @@ public class Order
         Discount = strategies
             .Select(s => s.Calculate(this))
             .FirstOrDefault(d => d > 0);
+        DiscountRate = Subtotal > 0 ? Discount / Subtotal : 0;
         Total = Subtotal - Discount;
     }
 
