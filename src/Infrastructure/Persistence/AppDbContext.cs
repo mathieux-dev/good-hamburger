@@ -25,8 +25,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Order>(e =>
         {
             e.HasKey(o => o.Id);
+            e.Property(o => o.Customer).IsRequired().HasMaxLength(100);
+            e.Property(o => o.Note).HasMaxLength(500);
+            e.Property(o => o.Status).IsRequired().HasMaxLength(20);
             e.Property(o => o.Subtotal).HasPrecision(10, 2);
             e.Property(o => o.Discount).HasPrecision(10, 2);
+            e.Property(o => o.DiscountRate).HasPrecision(5, 4);
             e.Property(o => o.Total).HasPrecision(10, 2);
             e.HasMany(o => o.Items)
              .WithOne()
