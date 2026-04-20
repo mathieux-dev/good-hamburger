@@ -44,11 +44,22 @@ public class Order
         return Result.Success();
     }
 
-    public void SetItems(IEnumerable<OrderItem> items, IEnumerable<IDiscountStrategy> strategies)
+    public Result SetItems(IEnumerable<Product> products, IEnumerable<IDiscountStrategy> strategies)
     {
+        var newItems = new List<OrderItem>();
+
+        foreach (var product in products)
+        {
+            if (newItems.Any(i => i.Product.Category == product.Category))
+                return Result.Failure($"Order already contains an item of category '{product.Category}'.");
+
+            newItems.Add(new OrderItem(Id, product));
+        }
+
         _items.Clear();
-        _items.AddRange(items);
+        _items.AddRange(newItems);
         RecalculateTotals(strategies);
+        return Result.Success();
     }
 
     private void RecalculateTotals(IEnumerable<IDiscountStrategy> strategies)

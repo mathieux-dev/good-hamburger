@@ -2,7 +2,6 @@ using GoodHamburger.Application.Common;
 using GoodHamburger.Application.DTOs;
 using GoodHamburger.Application.Orders.Commands;
 using GoodHamburger.Domain.Common;
-using GoodHamburger.Domain.Entities;
 using GoodHamburger.Domain.Interfaces;
 
 namespace GoodHamburger.Application.Orders.Handlers;
@@ -29,8 +28,7 @@ public class UpdateOrderHandler
         if (order is null)
             return Result<OrderDto>.Failure($"Order '{command.OrderId}' not found.");
 
-        var newItems = new List<Domain.Entities.OrderItem>();
-        var tempOrder = Order.Create();
+        var products = new List<Domain.Entities.Product>();
 
         foreach (var productId in command.ProductIds)
         {
@@ -38,12 +36,13 @@ public class UpdateOrderHandler
             if (product is null)
                 return Result<OrderDto>.Failure($"Product '{productId}' not found.");
 
-            var result = tempOrder.AddItem(product, _strategies);
-            if (result.IsFailure)
-                return Result<OrderDto>.Failure(result.Error);
+            products.Add(product);
         }
 
-        order.SetItems(tempOrder.Items, _strategies);
+        var result = order.SetItems(products, _strategies);
+        if (result.IsFailure)
+            return Result<OrderDto>.Failure(result.Error);
+
         await _orderRepository.UpdateAsync(order, ct);
         return Result<OrderDto>.Success(OrderMapper.ToDto(order));
     }
