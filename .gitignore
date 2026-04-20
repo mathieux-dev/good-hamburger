@@ -1,6 +1,7 @@
 # Project-specific
 docs/
 CLAUDE.md
+blazor/
 
 # .NET build output
 bin/

@@ -10,6 +10,18 @@ services:
       db:
         condition: service_healthy
 
+  web:
+    build:
+      context: .
+      dockerfile: src/Web/Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - GoodHamburger__ApiBaseUrl=http://api:8080
+    depends_on:
+      - api
+
   db:
     image: postgres:16-alpine
     environment:
