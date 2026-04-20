@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: src/Web/Dockerfile
     ports:
-      - "5001:8080"
+      - "5003:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - GoodHamburger__ApiBaseUrl=http://api:8080

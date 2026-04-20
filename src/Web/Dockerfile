@@ -6,7 +6,7 @@ RUN dotnet restore "src/Web/GoodHamburger.Web.csproj"
 
 COPY . .
 WORKDIR "/app/src/Web"
-RUN dotnet publish "GoodHamburger.Web.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "GoodHamburger.Web.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
