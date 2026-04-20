@@ -1,3 +1,3 @@
 namespace GoodHamburger.Application.Orders.Commands;
 
-public record CreateOrderCommand(IEnumerable<Guid> ProductIds);
+public record CreateOrderCommand(string Customer, string Note, IEnumerable<Guid> Items);

@@ -25,9 +25,9 @@ public class CreateOrderHandler
 
     public async Task<Result<OrderDto>> HandleAsync(CreateOrderCommand command, CancellationToken ct = default)
     {
-        var order = Order.Create();
+        var order = Order.Create(command.Customer, command.Note);
 
-        foreach (var productId in command.ProductIds)
+        foreach (var productId in command.Items)
         {
             var product = await _productRepository.GetByIdAsync(productId, ct);
             if (product is null)

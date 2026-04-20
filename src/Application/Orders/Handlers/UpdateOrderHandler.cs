@@ -30,7 +30,7 @@ public class UpdateOrderHandler
 
         var products = new List<Domain.Entities.Product>();
 
-        foreach (var productId in command.ProductIds)
+        foreach (var productId in command.Items)
         {
             var product = await _productRepository.GetByIdAsync(productId, ct);
             if (product is null)
@@ -42,6 +42,8 @@ public class UpdateOrderHandler
         var result = order.SetItems(products, _strategies);
         if (result.IsFailure)
             return Result<OrderDto>.Failure(result.Error);
+
+        order.Update(command.Customer, command.Note);
 
         await _orderRepository.UpdateAsync(order, ct);
         return Result<OrderDto>.Success(OrderMapper.ToDto(order));

@@ -1,9 +1,14 @@
 namespace GoodHamburger.Application.DTOs;
 
 public record OrderDto(
-    Guid Id,
+    string Id,
+    string Customer,
+    string Status,
+    string Note,
     IEnumerable<OrderItemDto> Items,
     decimal Subtotal,
-    decimal Discount,
+    decimal DiscountRate,
+    string? DiscountLabel,
+    decimal DiscountAmount,
     decimal Total,
-    DateTime CreatedAt);
+    string CreatedAt);

@@ -14,6 +14,20 @@ public class GetMenuHandler
     public async Task<IEnumerable<ProductDto>> HandleAsync(GetMenuQuery query, CancellationToken ct = default)
     {
         var products = await _productRepository.GetAllAsync(ct);
-        return products.Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Category.ToString()));
+        return products.Select(p =>
+        {
+            var (subtitle, description, placeholder) = GetMeta(p.Name);
+            return new ProductDto(p.Id.ToString(), p.Name, p.Price, p.Category.ToString(), subtitle, description, placeholder);
+        });
     }
+
+    private static (string Subtitle, string Description, string Placeholder) GetMeta(string name) => name switch
+    {
+        "X Burger"     => ("pão + burger + queijo", "O original.", "burger"),
+        "X Egg"        => ("pão + burger + ovo", "Gema escorrendo.", "egg"),
+        "X Bacon"      => ("pão + burger + bacon", "Favorito da casa.", "bacon"),
+        "Batata Frita" => ("porção crocante", "Corte rústico, sal grosso.", "fries"),
+        "Refrigerante" => ("lata 350ml", "Gelado.", "soda"),
+        _              => ("", "", "burger"),
+    };
 }

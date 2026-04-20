@@ -1,3 +1,10 @@
 namespace GoodHamburger.Application.DTOs;
 
-public record ProductDto(Guid Id, string Name, decimal Price, string Category);
+public record ProductDto(
+    string Id,
+    string Name,
+    decimal Price,
+    string Category,
+    string Subtitle = "",
+    string Description = "",
+    string Placeholder = "burger");
