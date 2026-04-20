@@ -5,6 +5,7 @@ using GoodHamburger.Domain.Interfaces;
 using GoodHamburger.Infrastructure.Persistence;
 using GoodHamburger.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +41,8 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapScalarApiReference(options =>
+        options.WithOpenApiRoutePattern("/swagger/v1/swagger.json"));
 }
 
 app.UseHttpsRedirection();
