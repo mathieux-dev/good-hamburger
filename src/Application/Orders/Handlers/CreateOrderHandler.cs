@@ -25,7 +25,7 @@ public class CreateOrderHandler
 
     public async Task<Result<OrderDto>> HandleAsync(CreateOrderCommand command, CancellationToken ct = default)
     {
-        var order = Order.Create(command.Customer, command.Note);
+        var order = Order.Create(command.Customer, command.Note, command.ServiceType);
 
         foreach (var productId in command.Items)
         {

@@ -63,6 +63,8 @@ else
                        CustomerChanged="v => _customer = v"
                        Note="@_note"
                        NoteChanged="v => _note = v"
+                       ServiceType="@_serviceType"
+                       ServiceTypeChanged="v => _serviceType = v"
                        Error="@_error"
                        OnDismissError="() => _error = null"
                        OnRemove="RemoveItem"
@@ -79,6 +81,7 @@ else
     private List<MenuItemDto> _current = new();
     private string _customer = "";
     private string _note = "";
+    private string _serviceType = "Salão";
     private string? _error;
     private bool _loading = true;
 
@@ -95,6 +98,7 @@ else
                 _current = existing.Items.ToList();
                 _customer = existing.Customer;
                 _note = existing.Note;
+                    _serviceType = existing.ServiceType;
             }
         }
     }
@@ -160,6 +164,7 @@ else
         {
             Customer = string.IsNullOrWhiteSpace(_customer) ? "Balcão" : _customer,
             Note = _note,
+            ServiceType = _serviceType,
             Items = _current.Select(i => i.Id).ToList()
         };
 

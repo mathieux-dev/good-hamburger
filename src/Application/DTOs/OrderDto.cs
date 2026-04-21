@@ -11,4 +11,5 @@ public record OrderDto(
     string? DiscountLabel,
     decimal DiscountAmount,
     decimal Total,
-    string CreatedAt);
+    string CreatedAt,
+    string ServiceType = "Salão");

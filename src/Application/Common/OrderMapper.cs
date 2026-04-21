@@ -30,6 +30,7 @@ internal static class OrderMapper
             discountLabel,
             order.Discount,
             order.Total,
-            order.CreatedAt.ToString("o"));
+            order.CreatedAt.ToString("o"),
+            order.ServiceType);
     }
 }

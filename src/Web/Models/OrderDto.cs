@@ -7,6 +7,7 @@ public class OrderDto
     public string Status { get; set; } = "preparando";
     public string CreatedAt { get; set; } = string.Empty;
     public string Note { get; set; } = string.Empty;
+    public string ServiceType { get; set; } = "Salão";
     public List<MenuItemDto> Items { get; set; } = new();
 
     public decimal Subtotal { get; set; }
@@ -20,5 +21,6 @@ public class OrderRequest
 {
     public string Customer { get; set; } = string.Empty;
     public string Note { get; set; } = string.Empty;
+    public string ServiceType { get; set; } = "Salão";
     public List<string> Items { get; set; } = new();
 }

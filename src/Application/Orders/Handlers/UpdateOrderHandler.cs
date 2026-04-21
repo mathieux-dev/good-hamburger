@@ -43,7 +43,7 @@ public class UpdateOrderHandler
         if (result.IsFailure)
             return Result<OrderDto>.Failure(result.Error);
 
-        order.Update(command.Customer, command.Note);
+        order.Update(command.Customer, command.Note, command.ServiceType);
 
         await _orderRepository.UpdateAsync(order, ct);
         return Result<OrderDto>.Success(OrderMapper.ToDto(order));

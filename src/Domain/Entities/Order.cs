@@ -12,6 +12,7 @@ public class Order
     public string Customer { get; private set; } = "Balcão";
     public string Note { get; private set; } = string.Empty;
     public string Status { get; private set; } = "preparando";
+    public string ServiceType { get; private set; } = "Salão";
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
     public decimal Subtotal { get; private set; }
     public decimal Discount { get; private set; }
@@ -23,19 +24,21 @@ public class Order
 
     private Order() { }
 
-    public static Order Create(string customer = "Balcão", string note = "") => new()
+    public static Order Create(string customer = "Balcão", string note = "", string serviceType = "Salão") => new()
     {
         Id = Guid.NewGuid(),
         CreatedAt = DateTime.UtcNow,
         Customer = string.IsNullOrWhiteSpace(customer) ? "Balcão" : customer,
         Note = note,
-        Status = "preparando"
+        Status = "preparando",
+        ServiceType = string.IsNullOrWhiteSpace(serviceType) ? "Salão" : serviceType
     };
 
-    public void Update(string customer, string note)
+    public void Update(string customer, string note, string serviceType)
     {
         Customer = string.IsNullOrWhiteSpace(customer) ? "Balcão" : customer;
         Note = note;
+        ServiceType = string.IsNullOrWhiteSpace(serviceType) ? "Salão" : serviceType;
     }
 
     public void SetStatus(string status) => Status = status;

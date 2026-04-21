@@ -36,6 +36,7 @@ public class AppDbContext : DbContext
             e.Property(o => o.Discount).HasPrecision(10, 2);
             e.Property(o => o.DiscountRate).HasPrecision(5, 4);
             e.Property(o => o.Total).HasPrecision(10, 2);
+            e.Property(o => o.ServiceType).IsRequired().HasMaxLength(20).HasDefaultValue("Salão");
             e.Property(o => o.IsDeleted);
             e.Property(o => o.DeletedAt);
             e.HasQueryFilter(o => !o.IsDeleted);

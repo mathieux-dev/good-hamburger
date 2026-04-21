@@ -55,6 +55,12 @@ namespace GoodHamburger.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasDefaultValue("Salão")
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
