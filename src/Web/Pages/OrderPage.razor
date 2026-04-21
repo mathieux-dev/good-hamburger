@@ -105,8 +105,8 @@ else
         return comboId switch
         {
             "full"     => cats.Contains(Category.Sandwich) && cats.Contains(Category.Side) && cats.Contains(Category.Drink),
-            "sand-ref" => cats.Contains(Category.Sandwich) && cats.Contains(Category.Drink),
-            "sand-bat" => cats.Contains(Category.Sandwich) && cats.Contains(Category.Side),
+            "sand-ref" => cats.Contains(Category.Sandwich) && cats.Contains(Category.Drink) && !cats.Contains(Category.Side),
+            "sand-bat" => cats.Contains(Category.Sandwich) && cats.Contains(Category.Side) && !cats.Contains(Category.Drink),
             _ => false
         };
     }
