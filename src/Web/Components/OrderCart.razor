@@ -45,7 +45,14 @@
             {
                 <div class="cart-row" @key="item.Id">
                     <div class="cart-thumb">
-                        <FoodIcon Kind="@item.Placeholder" Size="32" />
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" alt="@item.Name" style="width:32px;height:32px;object-fit:cover;border-radius:4px;" />
+                        }
+                        else
+                        {
+                            <FoodIcon Kind="@item.Placeholder" Size="32" />
+                        }
                     </div>
                     <div class="cart-info">
                         <div class="display-sm">@item.Name</div>
