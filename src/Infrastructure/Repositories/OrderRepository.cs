@@ -37,7 +37,8 @@ public class OrderRepository : IOrderRepository
 
     public async Task DeleteAsync(Order order, CancellationToken ct = default)
     {
-        _context.Orders.Remove(order);
+        order.SoftDelete();
+        _context.Orders.Update(order);
         await _context.SaveChangesAsync(ct);
     }
 }

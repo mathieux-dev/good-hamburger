@@ -51,8 +51,8 @@ else
             <article class="order-card" @key="order.Id">
                 <header>
                     <div>
-                        <div class="mono small">@order.CreatedAt · @order.Customer</div>
-                        <h3 class="display-md">@order.Id</h3>
+                        <div class="mono small">@FormatDate(order.CreatedAt) · @order.Customer</div>
+                        <h3 class="display-md">#@order.Id[..8].ToUpper()</h3>
                     </div>
                     <StatusBadge Status="@order.Status" />
                 </header>
@@ -92,14 +92,14 @@ else
 
                 <div class="order-actions">
                     <button class="btn btn-ghost btn-sm" @onclick="() => EditOrder(order)">✎ Editar</button>
-                    <select class="btn btn-dark btn-sm" @onchange="e => ChangeStatus(order.Id, e.Value!.ToString()!)">
-                        <option>Status ▾</option>
+                    <select class="btn btn-dark btn-sm status-select" value="@order.Status"
+                            @onchange="e => ChangeStatus(order.Id, e.Value!.ToString()!)">
                         <option value="preparando">Preparando</option>
                         <option value="pronto">Pronto</option>
                         <option value="entregue">Entregue</option>
                         <option value="cancelado">Cancelado</option>
                     </select>
-                    <button class="btn btn-ghost btn-sm btn-danger" @onclick="() => DeleteAsync(order.Id)">🗑</button>
+                    <button class="btn btn-ghost btn-sm btn-danger" style="font-size:18px;padding:4px 10px;" @onclick="() => DeleteAsync(order.Id)">🗑</button>
                 </div>
             </article>
         }
@@ -144,15 +144,28 @@ else
 
     private async Task ChangeStatus(string id, string status)
     {
-        // Num cenário real, PUT /api/orders/{id}/status — aqui simplifico:
+        await OrderService.UpdateStatusAsync(id, status);
         var order = _orders.First(o => o.Id == id);
         order.Status = status;
-        await Task.CompletedTask;
+        _totalDia = _orders.Where(o => o.Status != "cancelado").Sum(o => o.Total);
     }
 
     private async Task DeleteAsync(string id)
     {
         await OrderService.DeleteAsync(id);
         _orders = _orders.Where(o => o.Id != id).ToList();
+        _totalDia = _orders.Where(o => o.Status != "cancelado").Sum(o => o.Total);
+    }
+
+    private static string FormatDate(string iso)
+    {
+        if (!DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+            return iso;
+        var local = dt.ToLocalTime();
+        var diff = DateTime.Now - local;
+        if (diff.TotalMinutes < 1)   return "agora mesmo";
+        if (diff.TotalMinutes < 60)  return $"há {(int)diff.TotalMinutes} min";
+        if (diff.TotalHours < 24)    return $"hoje às {local:HH:mm}";
+        return local.ToString("dd/MM às HH:mm");
     }
 }

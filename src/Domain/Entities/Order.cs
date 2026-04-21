@@ -18,6 +18,8 @@ public class Order
     public decimal DiscountRate { get; private set; }
     public decimal Total { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     private Order() { }
 
@@ -34,6 +36,14 @@ public class Order
     {
         Customer = string.IsNullOrWhiteSpace(customer) ? "Balcão" : customer;
         Note = note;
+    }
+
+    public void SetStatus(string status) => Status = status;
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     public Result AddItem(Product product, IEnumerable<IDiscountStrategy> strategies)

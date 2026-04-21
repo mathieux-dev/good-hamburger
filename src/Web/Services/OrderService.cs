@@ -8,11 +8,9 @@ public interface IOrderService
     Task<OrderDto?> GetAsync(string id, CancellationToken ct = default);
     Task<OrderDto> CreateAsync(OrderRequest req, CancellationToken ct = default);
     Task UpdateAsync(string id, OrderRequest req, CancellationToken ct = default);
+    Task UpdateStatusAsync(string id, string status, CancellationToken ct = default);
     Task DeleteAsync(string id, CancellationToken ct = default);
 
-    /// <summary>
-    /// Valida localmente (antes de chamar a API) que não há itens duplicados por categoria.
-    /// </summary>
     (bool ok, string? error) ValidateLocal(IEnumerable<MenuItemDto> items);
 }
 
@@ -26,6 +24,7 @@ public class OrderService : IOrderService
     public Task<OrderDto?> GetAsync(string id, CancellationToken ct = default) => _api.GetOrderAsync(id, ct);
     public Task<OrderDto> CreateAsync(OrderRequest req, CancellationToken ct = default) => _api.CreateOrderAsync(req, ct);
     public Task UpdateAsync(string id, OrderRequest req, CancellationToken ct = default) => _api.UpdateOrderAsync(id, req, ct);
+    public Task UpdateStatusAsync(string id, string status, CancellationToken ct = default) => _api.UpdateStatusAsync(id, status, ct);
     public Task DeleteAsync(string id, CancellationToken ct = default) => _api.DeleteOrderAsync(id, ct);
 
     public (bool ok, string? error) ValidateLocal(IEnumerable<MenuItemDto> items)
