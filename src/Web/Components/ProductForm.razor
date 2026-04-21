@@ -1,0 +1,43 @@
+@using static GoodHamburger.Web.Pages.ProductsPage
+
+<div class="prod-form">
+    <div class="form-field">
+        <label class="form-label">Nome</label>
+        <input class="form-input" placeholder="Ex: X Frango" @bind="Model.Name" />
+    </div>
+    <div class="form-field">
+        <label class="form-label">Preço (R$)</label>
+        <input class="form-input" type="number" min="0.01" step="0.01" @bind="Model.Price" />
+    </div>
+    <div class="form-field">
+        <label class="form-label">Categoria</label>
+        <select class="form-input status-select" @bind="Model.Category">
+            <option value="Sandwich">Sanduíche</option>
+            <option value="Side">Acompanhamento</option>
+            <option value="Drink">Bebida</option>
+        </select>
+    </div>
+    <div class="form-field">
+        <label class="form-label">URL da imagem <span class="muted">(opcional)</span></label>
+        <input class="form-input" placeholder="https://..." @bind="Model.ImageUrl" />
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <div class="prod-img-preview">
+                <img src="@Model.ImageUrl" alt="preview" onerror="this.style.display='none'" />
+            </div>
+        }
+    </div>
+    <div class="prod-form-actions">
+        <button class="btn btn-primary btn-sm" @onclick="OnSave" disabled="@Saving">
+            @(Saving ? "Salvando…" : "Salvar")
+        </button>
+        <button class="btn btn-ghost btn-sm" @onclick="OnCancel" disabled="@Saving">Cancelar</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ProductFormModel Model    { get; set; } = null!;
+    [Parameter] public EventCallback    OnSave   { get; set; }
+    [Parameter] public EventCallback    OnCancel { get; set; }
+    [Parameter] public bool             Saving   { get; set; }
+}

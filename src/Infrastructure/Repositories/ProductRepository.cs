@@ -16,4 +16,23 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken ct = default) =>
         await _context.Products.ToListAsync(ct);
+
+    public async Task AddAsync(Product product, CancellationToken ct = default)
+    {
+        await _context.Products.AddAsync(product, ct);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAsync(Product product, CancellationToken ct = default)
+    {
+        _context.Products.Update(product);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteAsync(Product product, CancellationToken ct = default)
+    {
+        product.Deactivate();
+        _context.Products.Update(product);
+        await _context.SaveChangesAsync(ct);
+    }
 }

@@ -20,6 +20,8 @@ public class AppDbContext : DbContext
             e.Property(p => p.Name).IsRequired().HasMaxLength(100);
             e.Property(p => p.Price).HasPrecision(10, 2);
             e.Property(p => p.Category).HasConversion<string>();
+            e.Property(p => p.ImageUrl).HasMaxLength(500);
+            e.Property(p => p.IsActive);
         });
 
         modelBuilder.Entity<Order>(e =>
@@ -32,6 +34,9 @@ public class AppDbContext : DbContext
             e.Property(o => o.Discount).HasPrecision(10, 2);
             e.Property(o => o.DiscountRate).HasPrecision(5, 4);
             e.Property(o => o.Total).HasPrecision(10, 2);
+            e.Property(o => o.IsDeleted);
+            e.Property(o => o.DeletedAt);
+            e.HasQueryFilter(o => !o.IsDeleted);
             e.HasMany(o => o.Items)
              .WithOne()
              .HasForeignKey(i => i.OrderId)

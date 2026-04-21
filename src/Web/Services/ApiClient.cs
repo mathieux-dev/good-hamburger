@@ -79,6 +79,54 @@ public class ApiClient
         resp.EnsureSuccessStatusCode();
     }
 
+    public async Task<List<MenuItemDto>> GetProductsAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var res = await _http.GetFromJsonAsync<List<MenuItemDto>>("api/products", _jsonOptions, ct);
+            return res ?? new();
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "Falha ao consultar produtos.");
+            return new();
+        }
+    }
+
+    public async Task<MenuItemDto> CreateProductAsync(ProductWriteRequest req, CancellationToken ct = default)
+    {
+        var resp = await _http.PostAsJsonAsync("api/products", req, _jsonOptions, ct);
+        if (!resp.IsSuccessStatusCode)
+        {
+            var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
+            throw new ApiException(error?.Message ?? "Falha ao criar produto.", error);
+        }
+        return (await resp.Content.ReadFromJsonAsync<MenuItemDto>(_jsonOptions, cancellationToken: ct))!;
+    }
+
+    public async Task<MenuItemDto> UpdateProductAsync(string id, ProductWriteRequest req, CancellationToken ct = default)
+    {
+        var resp = await _http.PutAsJsonAsync($"api/products/{id}", req, _jsonOptions, ct);
+        if (!resp.IsSuccessStatusCode)
+        {
+            var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
+            throw new ApiException(error?.Message ?? "Falha ao atualizar produto.", error);
+        }
+        return (await resp.Content.ReadFromJsonAsync<MenuItemDto>(_jsonOptions, cancellationToken: ct))!;
+    }
+
+    public async Task DeleteProductAsync(string id, CancellationToken ct = default)
+    {
+        var resp = await _http.DeleteAsync($"api/products/{id}", ct);
+        resp.EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateStatusAsync(string id, string status, CancellationToken ct = default)
+    {
+        var resp = await _http.PatchAsJsonAsync($"api/orders/{id}/status", new { status }, _jsonOptions, ct);
+        resp.EnsureSuccessStatusCode();
+    }
+
     public async Task DeleteOrderAsync(string id, CancellationToken ct = default)
     {
         var resp = await _http.DeleteAsync($"api/orders/{id}", ct);

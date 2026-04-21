@@ -11,6 +11,7 @@ public class OrdersController : ControllerBase
 {
     private readonly CreateOrderHandler _createHandler;
     private readonly UpdateOrderHandler _updateHandler;
+    private readonly UpdateStatusHandler _updateStatusHandler;
     private readonly DeleteOrderHandler _deleteHandler;
     private readonly GetOrderHandler _getHandler;
     private readonly GetAllOrdersHandler _getAllHandler;
@@ -18,12 +19,14 @@ public class OrdersController : ControllerBase
     public OrdersController(
         CreateOrderHandler createHandler,
         UpdateOrderHandler updateHandler,
+        UpdateStatusHandler updateStatusHandler,
         DeleteOrderHandler deleteHandler,
         GetOrderHandler getHandler,
         GetAllOrdersHandler getAllHandler)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
+        _updateStatusHandler = updateStatusHandler;
         _deleteHandler = deleteHandler;
         _getHandler = getHandler;
         _getAllHandler = getAllHandler;
@@ -59,6 +62,13 @@ public class OrdersController : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
     }
 
+    [HttpPatch("{id:guid}/status")]
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
+    {
+        var result = await _updateStatusHandler.HandleAsync(new UpdateStatusCommand(id, request.Status), ct);
+        return result.IsSuccess ? NoContent() : NotFound(new { error = result.Error });
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
@@ -68,3 +78,4 @@ public class OrdersController : ControllerBase
 }
 
 public record UpdateOrderRequest(string Customer, string Note, IEnumerable<Guid> Items);
+public record UpdateStatusRequest(string Status);

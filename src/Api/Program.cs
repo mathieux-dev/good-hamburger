@@ -1,5 +1,6 @@
 using GoodHamburger.Application.Menu.Handlers;
 using GoodHamburger.Application.Orders.Handlers;
+using GoodHamburger.Application.Products.Handlers;
 using GoodHamburger.Domain.Discounts;
 using GoodHamburger.Domain.Interfaces;
 using GoodHamburger.Infrastructure.Persistence;
@@ -25,10 +26,14 @@ builder.Services.AddSingleton<IDiscountStrategy, SandwichSideDiscountStrategy>()
 
 builder.Services.AddScoped<CreateOrderHandler>();
 builder.Services.AddScoped<UpdateOrderHandler>();
+builder.Services.AddScoped<UpdateStatusHandler>();
 builder.Services.AddScoped<DeleteOrderHandler>();
 builder.Services.AddScoped<GetOrderHandler>();
 builder.Services.AddScoped<GetAllOrdersHandler>();
 builder.Services.AddScoped<GetMenuHandler>();
+builder.Services.AddScoped<CreateProductHandler>();
+builder.Services.AddScoped<UpdateProductHandler>();
+builder.Services.AddScoped<DeleteProductHandler>();
 
 var app = builder.Build();
 

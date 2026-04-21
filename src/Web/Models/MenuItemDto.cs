@@ -7,5 +7,7 @@ public record MenuItemDto(
     Category Category,
     string Subtitle = "",
     string Description = "",
-    string Placeholder = "burger"
+    string Placeholder = "burger",
+    string? ImageUrl = null,
+    bool IsActive = true
 );

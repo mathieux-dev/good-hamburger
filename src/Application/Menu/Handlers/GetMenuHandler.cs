@@ -14,11 +14,13 @@ public class GetMenuHandler
     public async Task<IEnumerable<ProductDto>> HandleAsync(GetMenuQuery query, CancellationToken ct = default)
     {
         var products = await _productRepository.GetAllAsync(ct);
-        return products.Select(p =>
-        {
-            var (subtitle, description, placeholder) = GetMeta(p.Name);
-            return new ProductDto(p.Id.ToString(), p.Name, p.Price, p.Category.ToString(), subtitle, description, placeholder);
-        });
+        return products
+            .Where(p => p.IsActive)
+            .Select(p =>
+            {
+                var (subtitle, description, placeholder) = GetMeta(p.Name);
+                return new ProductDto(p.Id.ToString(), p.Name, p.Price, p.Category.ToString(), subtitle, description, placeholder, p.ImageUrl);
+            });
     }
 
     private static (string Subtitle, string Description, string Placeholder) GetMeta(string name) => name switch

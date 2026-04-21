@@ -1,0 +1,198 @@
+@page "/products"
+@inject IProductService ProductService
+
+<PageTitle>Produtos · Good Hamburger</PageTitle>
+
+<div class="page-header">
+    <div class="crumb">Home / <b>Produtos</b></div>
+    <div class="header-row">
+        <h1 class="display-lg">Cardápio</h1>
+        <button class="btn btn-primary" @onclick="StartAdd">+ Novo produto</button>
+    </div>
+    <p class="subtitle">Gerencie os itens disponíveis para pedido.</p>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert" style="margin-bottom:16px">@_error <button @onclick="() => _error = null" style="float:right;background:none;border:none;color:inherit;cursor:pointer">✕</button></div>
+}
+
+@if (_loading)
+{
+    <div class="skeleton-grid">
+        @for (var i = 0; i < 5; i++) { <div class="skeleton-card"></div> }
+    </div>
+}
+else
+{
+    <div class="prod-grid">
+
+        @* Formulário de novo produto *@
+        @if (_adding)
+        {
+            <article class="order-card prod-form-card">
+                <div class="prod-form-title display-sm">Novo produto</div>
+                <ProductForm Model="_form"
+                             OnSave="ConfirmAdd"
+                             OnCancel="() => { _adding = false; _error = null; }"
+                             Saving="_saving" />
+            </article>
+        }
+
+        @* Cards de produto *@
+        @foreach (var p in _products)
+        {
+            <article class="order-card @(!p.IsActive ? "prod-inactive" : "")" @key="p.Id">
+                @if (_editingId == p.Id)
+                {
+                    <div class="prod-form-title display-sm">Editar produto</div>
+                    <ProductForm Model="_form"
+                                 OnSave="ConfirmEdit"
+                                 OnCancel="CancelEdit"
+                                 Saving="_saving" />
+                }
+                else
+                {
+                    <div class="prod-card-body">
+                        <div class="prod-icon-wrap">
+                            @if (!string.IsNullOrEmpty(p.ImageUrl))
+                            {
+                                <img src="@p.ImageUrl" alt="@p.Name" class="prod-img" />
+                            }
+                            else
+                            {
+                                <FoodIcon Kind="@CategoryIcon(p.Category)" Size="52" />
+                            }
+                        </div>
+                        <div class="prod-info">
+                            <div class="prod-cat-badge prod-cat-@p.Category.ToString().ToLower()">@p.Category.Label()</div>
+                            <div class="condensed prod-name">@p.Name</div>
+                            <div class="mono prod-price total-red">@p.Price.ToString("C")</div>
+                        </div>
+                    </div>
+                    <div class="order-actions" style="margin-top:12px">
+                        <button class="btn btn-ghost btn-sm" @onclick="() => StartEdit(p)">✎ Editar</button>
+                        <button class="btn btn-ghost btn-sm btn-danger" style="font-size:18px;padding:4px 10px;"
+                                @onclick="() => DeleteAsync(p.Id)">🗑</button>
+                    </div>
+                }
+            </article>
+        }
+
+    </div>
+}
+
+@code {
+    private List<MenuItemDto> _products = new();
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+
+    private bool _adding;
+    private string? _editingId;
+    private ProductFormModel _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        _loading = false;
+    }
+
+    private async Task LoadAsync()
+    {
+        _products = await ProductService.ListAsync();
+        // Incluir inativos: a API /products retorna só ativos; precisamos de um endpoint admin para ver todos.
+        // Por ora, listagem via menu (apenas ativos) serve para gestão.
+    }
+
+    private void StartAdd()
+    {
+        _editingId = null;
+        _form = new();
+        _adding = true;
+        _error = null;
+    }
+
+    private void StartEdit(MenuItemDto p)
+    {
+        _adding = false;
+        _editingId = p.Id;
+        _form = new ProductFormModel
+        {
+            Name     = p.Name,
+            Price    = p.Price,
+            Category = p.Category.ToString(),
+            ImageUrl = p.ImageUrl ?? ""
+        };
+        _error = null;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _error = null;
+    }
+
+    private async Task ConfirmAdd()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            var created = await ProductService.CreateAsync(
+                new ProductWriteRequest(_form.Name, _form.Price, _form.Category, NullIfEmpty(_form.ImageUrl)));
+            _products.Insert(0, created);
+            _adding = false;
+        }
+        catch (ApiException ex) { _error = ex.Message; }
+        catch (Exception ex)    { _error = $"Erro inesperado: {ex.Message}"; }
+        finally { _saving = false; }
+    }
+
+    private async Task ConfirmEdit()
+    {
+        if (_editingId is null) return;
+        _saving = true;
+        _error = null;
+        try
+        {
+            var updated = await ProductService.UpdateAsync(_editingId,
+                new ProductWriteRequest(_form.Name, _form.Price, _form.Category, NullIfEmpty(_form.ImageUrl)));
+            var idx = _products.FindIndex(p => p.Id == _editingId);
+            if (idx >= 0) _products[idx] = updated;
+            _editingId = null;
+        }
+        catch (ApiException ex) { _error = ex.Message; }
+        catch (Exception ex)    { _error = $"Erro inesperado: {ex.Message}"; }
+        finally { _saving = false; }
+    }
+
+    private async Task DeleteAsync(string id)
+    {
+        _error = null;
+        try
+        {
+            await ProductService.DeleteAsync(id);
+            _products = _products.Where(p => p.Id != id).ToList();
+        }
+        catch (Exception ex) { _error = $"Erro ao remover: {ex.Message}"; }
+    }
+
+    private static string CategoryIcon(Category cat) => cat switch
+    {
+        Category.Sandwich => "burger",
+        Category.Side     => "fries",
+        Category.Drink    => "soda",
+        _                 => "burger"
+    };
+
+    private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
+
+    public class ProductFormModel
+    {
+        public string Name     { get; set; } = "";
+        public decimal Price   { get; set; }
+        public string Category { get; set; } = "Sandwich";
+        public string ImageUrl { get; set; } = "";
+    }
+}

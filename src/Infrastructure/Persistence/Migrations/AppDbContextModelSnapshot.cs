@@ -36,6 +36,9 @@ namespace GoodHamburger.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("Discount")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
@@ -43,6 +46,9 @@ namespace GoodHamburger.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("DiscountRate")
                         .HasPrecision(5, 4)
                         .HasColumnType("numeric(5,4)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Note")
                         .IsRequired()
@@ -101,6 +107,13 @@ namespace GoodHamburger.Infrastructure.Persistence.Migrations
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
