@@ -31,7 +31,13 @@ public class OrderRepository : IOrderRepository
 
     public async Task UpdateAsync(Order order, CancellationToken ct = default)
     {
-        _context.Orders.Update(order);
+        var existing = await _context.OrderItems
+            .Where(i => i.OrderId == order.Id)
+            .ToListAsync(ct);
+
+        _context.OrderItems.RemoveRange(existing);
+        await _context.OrderItems.AddRangeAsync(order.Items, ct);
+
         await _context.SaveChangesAsync(ct);
     }
 

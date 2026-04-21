@@ -93,13 +93,15 @@ else
         if (!string.IsNullOrEmpty(EditId))
         {
             var existing = await OrderService.GetAsync(EditId);
-            if (existing is not null)
+            if (existing is null || existing.Status != "preparando")
             {
-                _current = existing.Items.ToList();
-                _customer = existing.Customer;
-                _note = existing.Note;
-                    _serviceType = existing.ServiceType;
+                Nav.NavigateTo("/admin");
+                return;
             }
+            _current = existing.Items.ToList();
+            _customer = existing.Customer;
+            _note = existing.Note;
+            _serviceType = existing.ServiceType;
         }
     }
 

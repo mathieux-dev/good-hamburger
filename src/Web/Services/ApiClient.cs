@@ -76,7 +76,11 @@ public class ApiClient
     public async Task UpdateOrderAsync(string id, OrderRequest req, CancellationToken ct = default)
     {
         var resp = await _http.PutAsJsonAsync($"api/orders/{id}", req, _jsonOptions, ct);
-        resp.EnsureSuccessStatusCode();
+        if (!resp.IsSuccessStatusCode)
+        {
+            var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
+            throw new ApiException(error?.Message ?? "Falha ao atualizar pedido.", error);
+        }
     }
 
     public async Task<List<MenuItemDto>> GetProductsAsync(CancellationToken ct = default)
