@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using GoodHamburger.Web.Models;
 
 namespace GoodHamburger.Web.Services;
@@ -7,6 +9,11 @@ public class ApiClient
 {
     private readonly HttpClient _http;
     private readonly ILogger<ApiClient> _log;
+
+    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public ApiClient(HttpClient http, ILogger<ApiClient> log)
     {
@@ -18,7 +25,7 @@ public class ApiClient
     {
         try
         {
-            var menu = await _http.GetFromJsonAsync<List<MenuItemDto>>("api/menu", ct);
+            var menu = await _http.GetFromJsonAsync<List<MenuItemDto>>("api/menu", _jsonOptions, ct);
             return menu ?? new List<MenuItemDto>();
         }
         catch (Exception ex)
@@ -30,27 +37,45 @@ public class ApiClient
 
     public async Task<List<OrderDto>> GetOrdersAsync(CancellationToken ct = default)
     {
-        var res = await _http.GetFromJsonAsync<List<OrderDto>>("api/orders", ct);
-        return res ?? new();
+        try
+        {
+            var res = await _http.GetFromJsonAsync<List<OrderDto>>("api/orders", _jsonOptions, ct);
+            return res ?? new();
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "Falha ao consultar pedidos.");
+            return new();
+        }
     }
 
     public async Task<OrderDto?> GetOrderAsync(string id, CancellationToken ct = default)
-        => await _http.GetFromJsonAsync<OrderDto>($"api/orders/{id}", ct);
+    {
+        try
+        {
+            return await _http.GetFromJsonAsync<OrderDto>($"api/orders/{id}", _jsonOptions, ct);
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "Falha ao consultar pedido {Id}.", id);
+            return null;
+        }
+    }
 
     public async Task<OrderDto> CreateOrderAsync(OrderRequest req, CancellationToken ct = default)
     {
-        var resp = await _http.PostAsJsonAsync("api/orders", req, ct);
+        var resp = await _http.PostAsJsonAsync("api/orders", req, _jsonOptions, ct);
         if (!resp.IsSuccessStatusCode)
         {
-            var error = await resp.Content.ReadFromJsonAsync<ApiError>(cancellationToken: ct);
+            var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
             throw new ApiException(error?.Message ?? "Falha ao criar pedido.", error);
         }
-        return (await resp.Content.ReadFromJsonAsync<OrderDto>(cancellationToken: ct))!;
+        return (await resp.Content.ReadFromJsonAsync<OrderDto>(_jsonOptions, cancellationToken: ct))!;
     }
 
     public async Task UpdateOrderAsync(string id, OrderRequest req, CancellationToken ct = default)
     {
-        var resp = await _http.PutAsJsonAsync($"api/orders/{id}", req, ct);
+        var resp = await _http.PutAsJsonAsync($"api/orders/{id}", req, _jsonOptions, ct);
         resp.EnsureSuccessStatusCode();
     }
 

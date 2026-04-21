@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GoodHamburger.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class OrdersController : ControllerBase
 {
     private readonly CreateOrderHandler _createHandler;

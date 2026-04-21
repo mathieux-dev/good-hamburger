@@ -168,7 +168,7 @@ else
             if (!string.IsNullOrEmpty(EditId))
             {
                 await OrderService.UpdateAsync(EditId, req);
-                Nav.NavigateTo($"/order/{EditId}/ticket");
+                Nav.NavigateTo($"/ticket/{EditId}");
             }
             else
             {

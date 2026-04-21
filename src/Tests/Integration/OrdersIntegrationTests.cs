@@ -54,12 +54,12 @@ public class OrdersIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task POST_Orders_ShouldCreateOrder_WithFullComboDiscount()
     {
-        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/menu");
+        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/api/menu");
         var sandwich = menu!.First(p => p.Category == "Sandwich");
         var side     = menu!.First(p => p.Category == "Side");
         var drink    = menu!.First(p => p.Category == "Drink");
 
-        var response = await _client.PostAsJsonAsync("/orders", new
+        var response = await _client.PostAsJsonAsync("/api/orders", new
         {
             customer = "Test",
             note = "",
@@ -76,10 +76,10 @@ public class OrdersIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task POST_Orders_ShouldReturn400_WhenDuplicateCategory()
     {
-        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/menu");
+        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/api/menu");
         var sandwiches = menu!.Where(p => p.Category == "Sandwich").ToList();
 
-        var response = await _client.PostAsJsonAsync("/orders", new
+        var response = await _client.PostAsJsonAsync("/api/orders", new
         {
             customer = "Test",
             note = "",
@@ -92,10 +92,10 @@ public class OrdersIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GET_Orders_ShouldReturnCreatedOrder()
     {
-        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/menu");
+        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/api/menu");
         var sandwich = menu!.First(p => p.Category == "Sandwich");
 
-        var created = await _client.PostAsJsonAsync("/orders", new
+        var created = await _client.PostAsJsonAsync("/api/orders", new
         {
             customer = "Test",
             note = "",
@@ -103,7 +103,7 @@ public class OrdersIntegrationTests : IAsyncLifetime
         });
         var order = await created.Content.ReadFromJsonAsync<OrderDto>();
 
-        var response = await _client.GetAsync($"/orders/{order!.Id}");
+        var response = await _client.GetAsync($"/api/orders/{order!.Id}");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -111,10 +111,10 @@ public class OrdersIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task DELETE_Orders_ShouldReturn204()
     {
-        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/menu");
+        var menu = await _client.GetFromJsonAsync<IEnumerable<ProductDto>>("/api/menu");
         var sandwich = menu!.First(p => p.Category == "Sandwich");
 
-        var created = await _client.PostAsJsonAsync("/orders", new
+        var created = await _client.PostAsJsonAsync("/api/orders", new
         {
             customer = "Test",
             note = "",
@@ -122,7 +122,7 @@ public class OrdersIntegrationTests : IAsyncLifetime
         });
         var order = await created.Content.ReadFromJsonAsync<OrderDto>();
 
-        var response = await _client.DeleteAsync($"/orders/{order!.Id}");
+        var response = await _client.DeleteAsync($"/api/orders/{order!.Id}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }

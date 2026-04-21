@@ -1,17 +1,19 @@
 @host = http://localhost:5000
 
 ### Listar cardápio
-GET {{host}}/menu
+GET {{host}}/api/menu
 Accept: application/json
 
 ###
 
 ### Criar pedido — combo completo (20% desconto)
-POST {{host}}/orders
+POST {{host}}/api/orders
 Content-Type: application/json
 
 {
-  "productIds": [
+  "customer": "Mesa 01",
+  "note": "",
+  "items": [
     "11111111-0000-0000-0000-000000000001",
     "11111111-0000-0000-0000-000000000004",
     "11111111-0000-0000-0000-000000000005"
@@ -21,11 +23,13 @@ Content-Type: application/json
 ###
 
 ### Criar pedido — sanduíche + refrigerante (15% desconto)
-POST {{host}}/orders
+POST {{host}}/api/orders
 Content-Type: application/json
 
 {
-  "productIds": [
+  "customer": "Balcão",
+  "note": "sem gelo",
+  "items": [
     "11111111-0000-0000-0000-000000000001",
     "11111111-0000-0000-0000-000000000005"
   ]
@@ -34,11 +38,13 @@ Content-Type: application/json
 ###
 
 ### Criar pedido — sanduíche + batata (10% desconto)
-POST {{host}}/orders
+POST {{host}}/api/orders
 Content-Type: application/json
 
 {
-  "productIds": [
+  "customer": "Delivery",
+  "note": "",
+  "items": [
     "11111111-0000-0000-0000-000000000001",
     "11111111-0000-0000-0000-000000000004"
   ]
@@ -47,23 +53,25 @@ Content-Type: application/json
 ###
 
 ### Listar todos os pedidos
-GET {{host}}/orders
+GET {{host}}/api/orders
 Accept: application/json
 
 ###
 
 ### Buscar pedido por ID (substituir pelo ID retornado no POST)
-GET {{host}}/orders/00000000-0000-0000-0000-000000000000
+GET {{host}}/api/orders/00000000-0000-0000-0000-000000000000
 Accept: application/json
 
 ###
 
 ### Atualizar pedido (substituir pelo ID retornado no POST)
-PUT {{host}}/orders/00000000-0000-0000-0000-000000000000
+PUT {{host}}/api/orders/00000000-0000-0000-0000-000000000000
 Content-Type: application/json
 
 {
-  "productIds": [
+  "customer": "Mesa 01",
+  "note": "sem cebola",
+  "items": [
     "11111111-0000-0000-0000-000000000003"
   ]
 }
@@ -71,16 +79,18 @@ Content-Type: application/json
 ###
 
 ### Remover pedido (substituir pelo ID retornado no POST)
-DELETE {{host}}/orders/00000000-0000-0000-0000-000000000000
+DELETE {{host}}/api/orders/00000000-0000-0000-0000-000000000000
 
 ###
 
 ### Erro — categoria duplicada
-POST {{host}}/orders
+POST {{host}}/api/orders
 Content-Type: application/json
 
 {
-  "productIds": [
+  "customer": "Teste",
+  "note": "",
+  "items": [
     "11111111-0000-0000-0000-000000000001",
     "11111111-0000-0000-0000-000000000002"
   ]
