@@ -38,7 +38,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] ProductRequest req, CancellationToken ct)
     {
         var result = await _create.HandleAsync(
-            new CreateProductCommand(req.Name, req.Price, req.Category, req.ImageUrl), ct);
+            new CreateProductCommand(req.Name, req.Price, req.Category, req.Subtitle, req.Description, req.ImageUrl), ct);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetAll), result.Value)
             : BadRequest(new { error = result.Error });
@@ -48,7 +48,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] ProductRequest req, CancellationToken ct)
     {
         var result = await _update.HandleAsync(
-            new UpdateProductCommand(id, req.Name, req.Price, req.ImageUrl), ct);
+            new UpdateProductCommand(id, req.Name, req.Price, req.Subtitle, req.Description, req.ImageUrl), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
     }
 
@@ -60,4 +60,4 @@ public class ProductsController : ControllerBase
     }
 }
 
-public record ProductRequest(string Name, decimal Price, string Category, string? ImageUrl);
+public record ProductRequest(string Name, decimal Price, string Category, string Subtitle, string Description, string? ImageUrl);

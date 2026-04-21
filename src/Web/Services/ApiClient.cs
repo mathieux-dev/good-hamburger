@@ -95,7 +95,8 @@ public class ApiClient
 
     public async Task<MenuItemDto> CreateProductAsync(ProductWriteRequest req, CancellationToken ct = default)
     {
-        var resp = await _http.PostAsJsonAsync("api/products", req, _jsonOptions, ct);
+        var body = new { req.Name, req.Price, req.Category, req.Subtitle, req.Description, req.ImageUrl };
+        var resp = await _http.PostAsJsonAsync("api/products", body, _jsonOptions, ct);
         if (!resp.IsSuccessStatusCode)
         {
             var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
@@ -106,7 +107,8 @@ public class ApiClient
 
     public async Task<MenuItemDto> UpdateProductAsync(string id, ProductWriteRequest req, CancellationToken ct = default)
     {
-        var resp = await _http.PutAsJsonAsync($"api/products/{id}", req, _jsonOptions, ct);
+        var body = new { req.Name, req.Price, req.Category, req.Subtitle, req.Description, req.ImageUrl };
+        var resp = await _http.PutAsJsonAsync($"api/products/{id}", body, _jsonOptions, ct);
         if (!resp.IsSuccessStatusCode)
         {
             var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);

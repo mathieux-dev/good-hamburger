@@ -1,3 +1,3 @@
 namespace GoodHamburger.Application.Products.Commands;
 
-public record CreateProductCommand(string Name, decimal Price, string Category, string? ImageUrl);
+public record CreateProductCommand(string Name, decimal Price, string Category, string Subtitle, string Description, string? ImageUrl);

@@ -24,7 +24,8 @@ public class CreateProductHandler
         if (command.Price <= 0)
             return Result<ProductDto>.Failure("Preço deve ser maior que zero.");
 
-        var product = Product.Create(command.Name.Trim(), command.Price, category, command.ImageUrl);
+        var product = Product.Create(command.Name.Trim(), command.Price, category,
+            command.Subtitle, command.Description, command.ImageUrl);
         await _repo.AddAsync(product, ct);
 
         return Result<ProductDto>.Success(ToDto(product));
@@ -32,5 +33,5 @@ public class CreateProductHandler
 
     internal static ProductDto ToDto(Product p) =>
         new(p.Id.ToString(), p.Name, p.Price, p.Category.ToString(),
-            ImageUrl: p.ImageUrl, IsActive: p.IsActive);
+            p.Subtitle, p.Description, ImageUrl: p.ImageUrl, IsActive: p.IsActive);
 }

@@ -119,10 +119,12 @@ else
         _editingId = p.Id;
         _form = new ProductFormModel
         {
-            Name     = p.Name,
-            Price    = p.Price,
-            Category = p.Category.ToString(),
-            ImageUrl = p.ImageUrl ?? ""
+            Name        = p.Name,
+            Price       = p.Price,
+            Category    = p.Category.ToString(),
+            Subtitle    = p.Subtitle,
+            Description = p.Description,
+            ImageUrl    = p.ImageUrl ?? ""
         };
         _error = null;
     }
@@ -140,7 +142,7 @@ else
         try
         {
             var created = await ProductService.CreateAsync(
-                new ProductWriteRequest(_form.Name, _form.Price, _form.Category, NullIfEmpty(_form.ImageUrl)));
+                new ProductWriteRequest(_form.Name, _form.Price, _form.Category, _form.Subtitle, _form.Description, NullIfEmpty(_form.ImageUrl)));
             _products.Insert(0, created);
             _adding = false;
         }
@@ -157,7 +159,7 @@ else
         try
         {
             var updated = await ProductService.UpdateAsync(_editingId,
-                new ProductWriteRequest(_form.Name, _form.Price, _form.Category, NullIfEmpty(_form.ImageUrl)));
+                new ProductWriteRequest(_form.Name, _form.Price, _form.Category, _form.Subtitle, _form.Description, NullIfEmpty(_form.ImageUrl)));
             var idx = _products.FindIndex(p => p.Id == _editingId);
             if (idx >= 0) _products[idx] = updated;
             _editingId = null;
@@ -190,9 +192,11 @@ else
 
     public class ProductFormModel
     {
-        public string Name     { get; set; } = "";
-        public decimal Price   { get; set; }
-        public string Category { get; set; } = "Sandwich";
-        public string ImageUrl { get; set; } = "";
+        public string Name        { get; set; } = "";
+        public decimal Price      { get; set; }
+        public string Category    { get; set; } = "Sandwich";
+        public string Subtitle    { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string ImageUrl    { get; set; } = "";
     }
 }

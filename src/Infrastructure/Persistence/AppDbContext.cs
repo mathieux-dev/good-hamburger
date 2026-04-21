@@ -20,6 +20,8 @@ public class AppDbContext : DbContext
             e.Property(p => p.Name).IsRequired().HasMaxLength(100);
             e.Property(p => p.Price).HasPrecision(10, 2);
             e.Property(p => p.Category).HasConversion<string>();
+            e.Property(p => p.Subtitle).HasMaxLength(200).HasDefaultValue("");
+            e.Property(p => p.Description).HasMaxLength(500).HasDefaultValue("");
             e.Property(p => p.ImageUrl).HasMaxLength(500);
             e.Property(p => p.IsActive);
         });
@@ -54,11 +56,11 @@ public class AppDbContext : DbContext
         });
 
         modelBuilder.Entity<Product>().HasData(
-            new Product(Guid.Parse("11111111-0000-0000-0000-000000000001"), "X Burger",    5.00m, ProductCategory.Sandwich),
-            new Product(Guid.Parse("11111111-0000-0000-0000-000000000002"), "X Egg",       4.50m, ProductCategory.Sandwich),
-            new Product(Guid.Parse("11111111-0000-0000-0000-000000000003"), "X Bacon",     7.00m, ProductCategory.Sandwich),
-            new Product(Guid.Parse("11111111-0000-0000-0000-000000000004"), "Batata Frita",2.00m, ProductCategory.Side),
-            new Product(Guid.Parse("11111111-0000-0000-0000-000000000005"), "Refrigerante",2.50m, ProductCategory.Drink)
+            new Product(Guid.Parse("11111111-0000-0000-0000-000000000001"), "X Burger",    5.00m, ProductCategory.Sandwich, "pão + burger + queijo", "O original."),
+            new Product(Guid.Parse("11111111-0000-0000-0000-000000000002"), "X Egg",       4.50m, ProductCategory.Sandwich, "pão + burger + ovo",    "Gema escorrendo."),
+            new Product(Guid.Parse("11111111-0000-0000-0000-000000000003"), "X Bacon",     7.00m, ProductCategory.Sandwich, "pão + burger + bacon",  "Favorito da casa."),
+            new Product(Guid.Parse("11111111-0000-0000-0000-000000000004"), "Batata Frita",2.00m, ProductCategory.Side,     "porção crocante",       "Corte rústico, sal grosso."),
+            new Product(Guid.Parse("11111111-0000-0000-0000-000000000005"), "Refrigerante",2.50m, ProductCategory.Drink,    "lata 350ml",            "Gelado.")
         );
     }
 }

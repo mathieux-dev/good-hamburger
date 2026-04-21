@@ -1,5 +1,6 @@
 using GoodHamburger.Application.DTOs;
 using GoodHamburger.Application.Menu.Queries;
+using GoodHamburger.Domain.Enums;
 using GoodHamburger.Domain.Interfaces;
 
 namespace GoodHamburger.Application.Menu.Handlers;
@@ -16,20 +17,16 @@ public class GetMenuHandler
         var products = await _productRepository.GetAllAsync(ct);
         return products
             .Where(p => p.IsActive)
-            .Select(p =>
-            {
-                var (subtitle, description, placeholder) = GetMeta(p.Name);
-                return new ProductDto(p.Id.ToString(), p.Name, p.Price, p.Category.ToString(), subtitle, description, placeholder, p.ImageUrl);
-            });
+            .Select(p => new ProductDto(
+                p.Id.ToString(), p.Name, p.Price, p.Category.ToString(),
+                p.Subtitle, p.Description, PlaceholderFor(p.Category), p.ImageUrl));
     }
 
-    private static (string Subtitle, string Description, string Placeholder) GetMeta(string name) => name switch
+    private static string PlaceholderFor(ProductCategory cat) => cat switch
     {
-        "X Burger"     => ("pão + burger + queijo", "O original.", "burger"),
-        "X Egg"        => ("pão + burger + ovo", "Gema escorrendo.", "egg"),
-        "X Bacon"      => ("pão + burger + bacon", "Favorito da casa.", "bacon"),
-        "Batata Frita" => ("porção crocante", "Corte rústico, sal grosso.", "fries"),
-        "Refrigerante" => ("lata 350ml", "Gelado.", "soda"),
-        _              => ("", "", "burger"),
+        ProductCategory.Sandwich => "burger",
+        ProductCategory.Side     => "fries",
+        ProductCategory.Drink    => "soda",
+        _                        => "burger",
     };
 }

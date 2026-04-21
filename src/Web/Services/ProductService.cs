@@ -10,7 +10,7 @@ public interface IProductService
     Task DeleteAsync(string id, CancellationToken ct = default);
 }
 
-public record ProductWriteRequest(string Name, decimal Price, string Category, string? ImageUrl);
+public record ProductWriteRequest(string Name, decimal Price, string Category, string Subtitle, string Description, string? ImageUrl);
 
 public class ProductService : IProductService
 {

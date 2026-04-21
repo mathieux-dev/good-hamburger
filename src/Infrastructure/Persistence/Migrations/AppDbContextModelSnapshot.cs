@@ -108,6 +108,12 @@ namespace GoodHamburger.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasDefaultValue("")
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -124,46 +130,22 @@ namespace GoodHamburger.Infrastructure.Persistence.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<string>("Subtitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasDefaultValue("")
+                        .HasColumnType("character varying(200)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Products");
 
                     b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-0000-0000-0000-000000000001"),
-                            Category = "Sandwich",
-                            Name = "X Burger",
-                            Price = 5.00m
-                        },
-                        new
-                        {
-                            Id = new Guid("11111111-0000-0000-0000-000000000002"),
-                            Category = "Sandwich",
-                            Name = "X Egg",
-                            Price = 4.50m
-                        },
-                        new
-                        {
-                            Id = new Guid("11111111-0000-0000-0000-000000000003"),
-                            Category = "Sandwich",
-                            Name = "X Bacon",
-                            Price = 7.00m
-                        },
-                        new
-                        {
-                            Id = new Guid("11111111-0000-0000-0000-000000000004"),
-                            Category = "Side",
-                            Name = "Batata Frita",
-                            Price = 2.00m
-                        },
-                        new
-                        {
-                            Id = new Guid("11111111-0000-0000-0000-000000000005"),
-                            Category = "Drink",
-                            Name = "Refrigerante",
-                            Price = 2.50m
-                        });
+                        new { Id = new Guid("11111111-0000-0000-0000-000000000001"), Category = "Sandwich", Description = "O original.",              Name = "X Burger",     Price = 5.00m, Subtitle = "pão + burger + queijo", IsActive = true },
+                        new { Id = new Guid("11111111-0000-0000-0000-000000000002"), Category = "Sandwich", Description = "Gema escorrendo.",           Name = "X Egg",        Price = 4.50m, Subtitle = "pão + burger + ovo",    IsActive = true },
+                        new { Id = new Guid("11111111-0000-0000-0000-000000000003"), Category = "Sandwich", Description = "Favorito da casa.",          Name = "X Bacon",      Price = 7.00m, Subtitle = "pão + burger + bacon",  IsActive = true },
+                        new { Id = new Guid("11111111-0000-0000-0000-000000000004"), Category = "Side",     Description = "Corte rústico, sal grosso.", Name = "Batata Frita", Price = 2.00m, Subtitle = "porção crocante",       IsActive = true },
+                        new { Id = new Guid("11111111-0000-0000-0000-000000000005"), Category = "Drink",    Description = "Gelado.",                    Name = "Refrigerante", Price = 2.50m, Subtitle = "lata 350ml",            IsActive = true });
                 });
 
             modelBuilder.Entity("GoodHamburger.Domain.Entities.OrderItem", b =>

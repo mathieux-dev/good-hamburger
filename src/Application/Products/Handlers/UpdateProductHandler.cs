@@ -24,7 +24,7 @@ public class UpdateProductHandler
         if (command.Price <= 0)
             return Result<ProductDto>.Failure("Preço deve ser maior que zero.");
 
-        product.Update(command.Name.Trim(), command.Price, command.ImageUrl);
+        product.Update(command.Name.Trim(), command.Price, command.Subtitle, command.Description, command.ImageUrl);
         await _repo.UpdateAsync(product, ct);
 
         return Result<ProductDto>.Success(CreateProductHandler.ToDto(product));

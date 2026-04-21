@@ -18,6 +18,14 @@
         </select>
     </div>
     <div class="form-field">
+        <label class="form-label">Subtítulo <span class="muted">(ex: pão + burger + queijo)</span></label>
+        <input class="form-input" placeholder="Ex: pão + frango grelhado" @bind="Model.Subtitle" />
+    </div>
+    <div class="form-field">
+        <label class="form-label">Descrição <span class="muted">(opcional)</span></label>
+        <input class="form-input" placeholder="Ex: Temperado na brasa." @bind="Model.Description" />
+    </div>
+    <div class="form-field">
         <label class="form-label">URL da imagem <span class="muted">(opcional)</span></label>
         <input class="form-input" placeholder="https://..." @bind="Model.ImageUrl" />
         @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
