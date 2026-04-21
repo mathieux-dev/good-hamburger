@@ -1,5 +1,6 @@
 @page "/products"
 @inject IProductService ProductService
+@inject IJSRuntime JS
 
 <PageTitle>Produtos · Good Hamburger</PageTitle>
 
@@ -26,61 +27,42 @@
 else
 {
     <div class="prod-grid">
-
-        @* Formulário de novo produto *@
-        @if (_adding)
-        {
-            <article class="order-card prod-form-card">
-                <div class="prod-form-title display-sm">Novo produto</div>
-                <ProductForm Model="_form"
-                             OnSave="ConfirmAdd"
-                             OnCancel="() => { _adding = false; _error = null; }"
-                             Saving="_saving" />
-            </article>
-        }
-
-        @* Cards de produto *@
         @foreach (var p in _products)
         {
             <article class="order-card @(!p.IsActive ? "prod-inactive" : "")" @key="p.Id">
-                @if (_editingId == p.Id)
-                {
-                    <div class="prod-form-title display-sm">Editar produto</div>
-                    <ProductForm Model="_form"
-                                 OnSave="ConfirmEdit"
-                                 OnCancel="CancelEdit"
-                                 Saving="_saving" />
-                }
-                else
-                {
-                    <div class="prod-card-body">
-                        <div class="prod-icon-wrap">
-                            @if (!string.IsNullOrEmpty(p.ImageUrl))
-                            {
-                                <img src="@p.ImageUrl" alt="@p.Name" class="prod-img" />
-                            }
-                            else
-                            {
-                                <FoodIcon Kind="@CategoryIcon(p.Category)" Size="52" />
-                            }
-                        </div>
-                        <div class="prod-info">
-                            <div class="prod-cat-badge prod-cat-@p.Category.ToString().ToLower()">@p.Category.Label()</div>
-                            <div class="condensed prod-name">@p.Name</div>
-                            <div class="mono prod-price total-red">@p.Price.ToString("C")</div>
-                        </div>
+                <div class="prod-card-body">
+                    <div class="prod-icon-wrap">
+                        @if (!string.IsNullOrEmpty(p.ImageUrl))
+                        {
+                            <img src="@p.ImageUrl" alt="@p.Name" class="prod-img" />
+                        }
+                        else
+                        {
+                            <FoodIcon Kind="@CategoryIcon(p.Category)" Size="52" />
+                        }
                     </div>
-                    <div class="order-actions" style="margin-top:12px">
-                        <button class="btn btn-ghost btn-sm" @onclick="() => StartEdit(p)">✎ Editar</button>
-                        <button class="btn btn-ghost btn-sm btn-danger" style="font-size:18px;padding:4px 10px;"
-                                @onclick="() => DeleteAsync(p.Id)">🗑</button>
+                    <div class="prod-info">
+                        <div class="prod-cat-badge prod-cat-@p.Category.ToString().ToLower()">@p.Category.Label()</div>
+                        <div class="condensed prod-name">@p.Name</div>
+                        <div class="mono prod-price total-red">@p.Price.ToString("C")</div>
                     </div>
-                }
+                </div>
+                <div class="order-actions" style="margin-top:12px">
+                    <button class="btn btn-ghost btn-sm" @onclick="() => StartEdit(p)">✎ Editar</button>
+                    <button class="btn btn-ghost btn-sm btn-danger" style="font-size:18px;padding:4px 10px;"
+                            @onclick="() => DeleteAsync(p.Id, p.Name)">🗑</button>
+                </div>
             </article>
         }
-
     </div>
 }
+
+<Modal IsOpen="_modalOpen" Title="@_modalTitle" OnClose="CloseModal">
+    <ProductForm Model="_form"
+                 OnSave="_editingId is null ? ConfirmAdd : ConfirmEdit"
+                 OnCancel="CloseModal"
+                 Saving="_saving" />
+</Modal>
 
 @code {
     private List<MenuItemDto> _products = new();
@@ -88,7 +70,8 @@ else
     private bool _saving;
     private string? _error;
 
-    private bool _adding;
+    private bool _modalOpen;
+    private string _modalTitle = "";
     private string? _editingId;
     private ProductFormModel _form = new();
 
@@ -98,24 +81,19 @@ else
         _loading = false;
     }
 
-    private async Task LoadAsync()
-    {
-        _products = await ProductService.ListAsync();
-        // Incluir inativos: a API /products retorna só ativos; precisamos de um endpoint admin para ver todos.
-        // Por ora, listagem via menu (apenas ativos) serve para gestão.
-    }
+    private async Task LoadAsync() => _products = await ProductService.ListAsync();
 
     private void StartAdd()
     {
         _editingId = null;
         _form = new();
-        _adding = true;
+        _modalTitle = "Novo produto";
+        _modalOpen = true;
         _error = null;
     }
 
     private void StartEdit(MenuItemDto p)
     {
-        _adding = false;
         _editingId = p.Id;
         _form = new ProductFormModel
         {
@@ -126,11 +104,14 @@ else
             Description = p.Description,
             ImageUrl    = p.ImageUrl ?? ""
         };
+        _modalTitle = "Editar produto";
+        _modalOpen = true;
         _error = null;
     }
 
-    private void CancelEdit()
+    private void CloseModal()
     {
+        _modalOpen = false;
         _editingId = null;
         _error = null;
     }
@@ -144,7 +125,7 @@ else
             var created = await ProductService.CreateAsync(
                 new ProductWriteRequest(_form.Name, _form.Price, _form.Category, _form.Subtitle, _form.Description, NullIfEmpty(_form.ImageUrl)));
             _products.Insert(0, created);
-            _adding = false;
+            CloseModal();
         }
         catch (ApiException ex) { _error = ex.Message; }
         catch (Exception ex)    { _error = $"Erro inesperado: {ex.Message}"; }
@@ -162,15 +143,17 @@ else
                 new ProductWriteRequest(_form.Name, _form.Price, _form.Category, _form.Subtitle, _form.Description, NullIfEmpty(_form.ImageUrl)));
             var idx = _products.FindIndex(p => p.Id == _editingId);
             if (idx >= 0) _products[idx] = updated;
-            _editingId = null;
+            CloseModal();
         }
         catch (ApiException ex) { _error = ex.Message; }
         catch (Exception ex)    { _error = $"Erro inesperado: {ex.Message}"; }
         finally { _saving = false; }
     }
 
-    private async Task DeleteAsync(string id)
+    private async Task DeleteAsync(string id, string name)
     {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Remover \"{name}\"? Esta ação não pode ser desfeita.");
+        if (!confirmed) return;
         _error = null;
         try
         {
