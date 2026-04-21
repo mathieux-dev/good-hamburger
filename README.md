@@ -1,16 +1,23 @@
 # Good Hamburger — Sistema de Pedidos
 
-API REST para gerenciamento de pedidos de uma lanchonete, com regras de negócio para montagem de combos e aplicação automática de descontos.
+Sistema completo de gerenciamento de pedidos para lanchonete: API REST com regras de negócio para combos e descontos automáticos, e frontend Blazor Server para operação do caixa e gestão do cardápio.
 
 ---
 
 ## Tecnologias
 
+**Backend**
 - .NET 8 / ASP.NET Core Web API
 - Entity Framework Core + Npgsql
 - PostgreSQL
-- Docker / Docker Compose
 - xUnit + FluentAssertions + Testcontainers
+
+**Frontend**
+- Blazor Server (.NET 8)
+- SignalR (circuit em tempo real)
+
+**Infraestrutura**
+- Docker / Docker Compose
 
 ---
 
@@ -20,8 +27,11 @@ API REST para gerenciamento de pedidos de uma lanchonete, com regras de negócio
 docker-compose up --build
 ```
 
-A API ficará disponível em `http://localhost:5000`.  
-Swagger em `http://localhost:5000/swagger`.
+| Serviço   | URL                         |
+|-----------|-----------------------------|
+| Frontend  | http://localhost:5001        |
+| API       | http://localhost:5000        |
+| Scalar UI | http://localhost:5000/scalar |
 
 ---
 
@@ -39,21 +49,39 @@ Os testes de integração sobem um container PostgreSQL real via Testcontainers 
 
 ---
 
+## Frontend
+
+| Rota           | Descrição                                          |
+|----------------|----------------------------------------------------|
+| `/`            | Página inicial                                     |
+| `/order`       | Montar novo pedido (menu + carrinho interativo)    |
+| `/order/{id}`  | Editar pedido (restrito a status "preparando")     |
+| `/ticket/{id}` | Comprovante imprimível                             |
+| `/admin`       | Gestão de pedidos — filtros por status, tipo e busca |
+| `/products`    | CRUD do cardápio com modal flutuante               |
+| `/dashboard`   | KPIs e estatísticas por período                    |
+
+---
+
 ## Cardápio
+
+Itens iniciais (semeados via migration). Novos produtos podem ser adicionados pelo admin.
 
 | Produto       | Categoria | Preço   |
 |---------------|-----------|---------|
-| X Burger      | SANDWICH  | R$ 5,00 |
-| X Egg         | SANDWICH  | R$ 4,50 |
-| X Bacon       | SANDWICH  | R$ 7,00 |
-| Batata Frita  | SIDE      | R$ 2,00 |
-| Refrigerante  | DRINK     | R$ 2,50 |
+| X Burger      | Sandwich  | R$ 5,00 |
+| X Egg         | Sandwich  | R$ 4,50 |
+| X Bacon       | Sandwich  | R$ 7,00 |
+| Batata Frita  | Side      | R$ 2,00 |
+| Refrigerante  | Drink     | R$ 2,50 |
+
+Produtos possuem `Subtitle`, `Description`, `ImageUrl` e `IsActive`.
 
 ---
 
 ## Regras de Negócio
 
-Um pedido pode conter no máximo **um item por categoria** (`SANDWICH`, `SIDE`, `DRINK`).
+Um pedido pode conter no máximo **um item por categoria** (`Sandwich`, `Side`, `Drink`).
 
 ### Descontos aplicados automaticamente
 
@@ -63,67 +91,73 @@ Um pedido pode conter no máximo **um item por categoria** (`SANDWICH`, `SIDE`, 
 | Sanduíche + Refrigerante          | 15%      |
 | Sanduíche + Batata                | 10%      |
 
+### Tipo de atendimento
+
+Cada pedido identifica o canal: **Salão**, **Retirada** ou **Delivery**.
+
+### Edição e exclusão
+
+- Edição de pedidos restrita a status `"preparando"`.
+- Exclusão via **soft delete** (`IsDeleted` / `DeletedAt`), com filtro global no EF Core.
+
 ---
 
-## Endpoints
+## API — Endpoints
 
-### Pedidos
+### Pedidos (`/api/orders`)
 
-| Método | Rota           | Descrição      | Sucesso |
-|--------|----------------|----------------|---------|
-| POST   | /orders        | Criar pedido   | 201     |
-| GET    | /orders        | Listar pedidos | 200     |
-| GET    | /orders/{id}   | Buscar por ID  | 200     |
-| PUT    | /orders/{id}   | Atualizar      | 200     |
-| DELETE | /orders/{id}   | Remover        | 204     |
+| Método | Rota                    | Descrição           | Sucesso |
+|--------|-------------------------|---------------------|---------|
+| POST   | /api/orders             | Criar pedido        | 201     |
+| GET    | /api/orders             | Listar pedidos      | 200     |
+| GET    | /api/orders/{id}        | Buscar por ID       | 200     |
+| PUT    | /api/orders/{id}        | Atualizar pedido    | 200     |
+| PATCH  | /api/orders/{id}/status | Atualizar status    | 204     |
+| DELETE | /api/orders/{id}        | Remover (soft)      | 204     |
 
-### Cardápio
+### Cardápio (`/api/menu` e `/api/products`)
 
-| Método | Rota  | Descrição       |
-|--------|-------|-----------------|
-| GET    | /menu | Listar produtos |
+| Método | Rota                | Descrição           | Sucesso |
+|--------|---------------------|---------------------|---------|
+| GET    | /api/menu           | Listar itens ativos | 200     |
+| GET    | /api/products       | Listar todos        | 200     |
+| POST   | /api/products       | Criar produto       | 201     |
+| PUT    | /api/products/{id}  | Atualizar produto   | 200     |
+| DELETE | /api/products/{id}  | Remover produto     | 204     |
 
 ---
 
 ## Arquitetura
 
-Clean Architecture com DDD Lite em quatro camadas:
+Clean Architecture com DDD Lite em cinco camadas:
 
 ```
 src/
  ├── Api             — Controllers, entrada HTTP, DI wiring
  ├── Application     — Casos de uso (CQRS leve: commands/queries + handlers)
  ├── Domain          — Entidades, regras de negócio, interfaces
- └── Infrastructure  — EF Core, repositórios, migrations, seed
+ ├── Infrastructure  — EF Core, repositórios, migrations, seed
+ └── Web             — Blazor Server (pages, components, services HTTP)
 ```
 
-**Direção de dependência:** `Api → Application → Domain ← Infrastructure`
+**Direção de dependência:** `Api → Application → Domain ← Infrastructure` / `Web → Api (HTTP)`
 
 ### Decisões arquiteturais
 
 **Clean Architecture**  
-Mantém o domínio isolado de frameworks e infraestrutura. A lógica de negócio (descontos, validação de duplicatas) vive exclusivamente em `Domain`, sem dependência de EF Core ou ASP.NET.
+Domínio isolado de frameworks. Lógica de negócio (descontos, validação de duplicatas) vive exclusivamente em `Domain`, sem dependência de EF Core ou ASP.NET.
 
 **Strategy Pattern para descontos**  
-Cada regra de desconto é uma classe independente que implementa `IDiscountStrategy`. Adicionar uma nova regra = nova classe, sem alterar as existentes. As strategies são registradas no DI como `IEnumerable<IDiscountStrategy>` e avaliadas em ordem de prioridade (maior combo primeiro).
+Cada regra é uma classe independente que implementa `IDiscountStrategy`. Adicionar nova regra = nova classe, sem alterar as existentes. Registradas no DI como `IEnumerable<IDiscountStrategy>` e avaliadas por prioridade (maior combo primeiro).
 
 **Result Pattern**  
-Erros de negócio são retornados como `Result<T>` em vez de exceções. O controller inspeciona `IsSuccess` e escolhe o status HTTP adequado (400, 404, 201 etc.).
+Erros de negócio retornados como `Result<T>` em vez de exceções. O controller inspeciona `IsSuccess` e escolhe o status HTTP adequado.
 
 **CQRS leve**  
-Sem MediatR — handlers são classes simples injetadas diretamente nos controllers. Separa leitura de escrita sem adicionar dependências externas.
+Sem MediatR — handlers são classes simples injetadas diretamente nos controllers. Separa leitura de escrita sem dependências externas.
 
-**Seed via EF Core `HasData`**  
-O cardápio com IDs fixos é semeado pela migration inicial, garantindo que os dados estejam presentes em qualquer ambiente ao executar `dotnet ef database update` ou via `Migrate()` no startup.
+**Soft delete em pedidos**  
+`Order` possui `IsDeleted` e `DeletedAt`. Global query filter no EF Core garante que registros deletados nunca apareçam nas queries por padrão.
 
----
-
-## O que foi deixado de fora
-
-| Item | Motivo |
-|------|--------|
-| Autenticação / JWT | Fora do escopo do desafio |
-| Frontend em Blazor | Diferencial opcional; priorizei cobertura de testes |
-| Cache (Redis) | Sem requisito de performance no desafio |
-| Paginação em `GET /orders` | Volume de dados não justifica neste contexto |
-| Soft delete | Não especificado; `DELETE` remove permanentemente |
+**Update de itens do pedido**  
+`OrderRepository.UpdateAsync` deleta explicitamente os `OrderItem` antigos e re-insere os novos em vez de usar `_context.Update()`, evitando conflitos de change tracking do EF Core com coleções substituídas.
