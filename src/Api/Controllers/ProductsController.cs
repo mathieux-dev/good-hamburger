@@ -49,7 +49,9 @@ public class ProductsController : ControllerBase
     {
         var result = await _update.HandleAsync(
             new UpdateProductCommand(id, req.Name, req.Price, req.Subtitle, req.Description, req.ImageUrl), ct);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(new { error = result.Error });
+        return result.IsSuccess ? Ok(result.Value)
+            : result.Error.Contains("não encontrado") ? NotFound(new { error = result.Error })
+            : BadRequest(new { error = result.Error });
     }
 
     [HttpDelete("{id:guid}")]

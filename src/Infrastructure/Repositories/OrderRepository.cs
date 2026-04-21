@@ -31,12 +31,18 @@ public class OrderRepository : IOrderRepository
 
     public async Task UpdateAsync(Order order, CancellationToken ct = default)
     {
-        var existing = await _context.OrderItems
+        var currentIds = order.Items.Select(i => i.Id).ToHashSet();
+
+        var existingItems = await _context.OrderItems
             .Where(i => i.OrderId == order.Id)
             .ToListAsync(ct);
 
-        _context.OrderItems.RemoveRange(existing);
-        await _context.OrderItems.AddRangeAsync(order.Items, ct);
+        var toRemove = existingItems.Where(i => !currentIds.Contains(i.Id)).ToList();
+        _context.OrderItems.RemoveRange(toRemove);
+
+        var existingIds = existingItems.Select(i => i.Id).ToHashSet();
+        var toAdd = order.Items.Where(i => !existingIds.Contains(i.Id)).ToList();
+        await _context.OrderItems.AddRangeAsync(toAdd, ct);
 
         await _context.SaveChangesAsync(ct);
     }
