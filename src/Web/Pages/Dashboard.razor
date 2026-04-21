@@ -1,0 +1,249 @@
+@page "/dashboard"
+@inject IOrderService OrderService
+
+<PageTitle>Dashboard · Good Hamburger</PageTitle>
+
+<div class="page-header">
+    <div class="crumb">Home / <b>Dashboard</b></div>
+    <div class="header-row">
+        <h1 class="display-lg">Estatísticas</h1>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="skeleton-grid">
+        @for (var i = 0; i < 6; i++) { <div class="skeleton-card"></div> }
+    </div>
+}
+else
+{
+    <div class="db-period-bar">
+        <button class="filter-tab @(_period == "today"   ? "active" : "")" @onclick='() => SetPeriod("today")'>Hoje</button>
+        <button class="filter-tab @(_period == "month"   ? "active" : "")" @onclick='() => SetPeriod("month")'>Este mês</button>
+        <button class="filter-tab @(_period == "total"   ? "active" : "")" @onclick='() => SetPeriod("total")'>Total</button>
+        <div class="db-date-wrap">
+            <input class="db-date-input" type="date"
+                   value="@_customDate.ToString("yyyy-MM-dd")"
+                   max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                   @onchange="OnDateChanged" />
+        </div>
+        <span class="db-period-label mono small">@PeriodLabel</span>
+    </div>
+
+    @if (!_orders.Any())
+    {
+        <div class="empty-state">
+            <h2 class="display-md" style="color:var(--cream)">Nenhum pedido no período</h2>
+            <p class="subtitle">Tente outro intervalo de datas.</p>
+        </div>
+    }
+    else
+    {
+        <div class="db-kpi-row">
+            <div class="db-kpi-card">
+                <div class="db-kpi-label">FATURAMENTO</div>
+                <div class="db-kpi-value total-red">@_revenue.ToString("C")</div>
+                <div class="db-kpi-sub">pedidos não cancelados</div>
+            </div>
+            <div class="db-kpi-card">
+                <div class="db-kpi-label">PEDIDOS</div>
+                <div class="db-kpi-value">@_orders.Count</div>
+                <div class="db-kpi-sub">no período</div>
+            </div>
+            <div class="db-kpi-card">
+                <div class="db-kpi-label">TICKET MÉDIO</div>
+                <div class="db-kpi-value total-red">@_avgTicket.ToString("C")</div>
+                <div class="db-kpi-sub">por pedido ativo</div>
+            </div>
+            <div class="db-kpi-card db-kpi-card--mustard">
+                <div class="db-kpi-label">DESCONTO TOTAL</div>
+                <div class="db-kpi-value">@_totalDiscount.ToString("C")</div>
+                <div class="db-kpi-sub">economizado pelos clientes</div>
+            </div>
+        </div>
+
+        <div class="orders-grid">
+
+            <article class="order-card">
+                <header><h3 class="display-sm upper">Pedidos por status</h3></header>
+                <div class="db-bars">
+                    @foreach (var (label, count, cls) in _byStatus)
+                    {
+                        var pct = _orders.Count > 0 ? (double)count / _orders.Count * 100 : 0;
+                        <div class="db-bar-row">
+                            <span class="mono small db-bar-label">@label</span>
+                            <div class="db-bar-track">
+                                <div class="db-bar-fill db-bar-@cls" style="width:@pct.ToString("F0")%"></div>
+                            </div>
+                            <span class="mono small">@count</span>
+                        </div>
+                    }
+                </div>
+            </article>
+
+            <article class="order-card">
+                <header><h3 class="display-sm upper">Produtos mais vendidos</h3></header>
+                <div class="order-items">
+                    @foreach (var (name, count, rev) in _topProducts)
+                    {
+                        <div class="order-row">
+                            <div>
+                                <div class="condensed">@name</div>
+                                <div class="mono small muted">@count pedido@(count != 1 ? "s" : "")</div>
+                            </div>
+                            <span class="mono total-red">@rev.ToString("C")</span>
+                        </div>
+                    }
+                </div>
+            </article>
+
+            <article class="order-card">
+                <header><h3 class="display-sm upper">Combos aplicados</h3></header>
+                <div class="db-bars">
+                    @foreach (var (label, count, pct) in _comboStats)
+                    {
+                        <div class="db-bar-row">
+                            <span class="mono small db-bar-label">@label</span>
+                            <div class="db-bar-track">
+                                <div class="db-bar-fill db-bar-green" style="width:@pct.ToString("F0")%"></div>
+                            </div>
+                            <span class="mono small">@count</span>
+                        </div>
+                    }
+                </div>
+            </article>
+
+            <article class="order-card">
+                <header><h3 class="display-sm upper">Categorias vendidas</h3></header>
+                <div class="order-items">
+                    @foreach (var (cat, count) in _byCategory)
+                    {
+                        <div class="order-row">
+                            <span class="condensed">@cat</span>
+                            <span class="mono small">@count un.</span>
+                        </div>
+                    }
+                </div>
+            </article>
+
+        </div>
+    }
+}
+
+@code {
+    private List<OrderDto> _allOrders = new();
+    private List<OrderDto> _orders    = new();
+    private bool _loading = true;
+
+    private string _period = "today";
+    private DateOnly _customDate = DateOnly.FromDateTime(DateTime.Today);
+
+    private decimal _revenue;
+    private decimal _avgTicket;
+    private decimal _totalDiscount;
+    private List<(string Label, int Count, string Cls)>      _byStatus    = new();
+    private List<(string Name,  int Count, decimal Revenue)> _topProducts = new();
+    private List<(string Label, int Count, double Pct)>      _comboStats  = new();
+    private List<(string Cat,   int Count)>                  _byCategory  = new();
+
+    private string PeriodLabel => _period switch
+    {
+        "today" => DateTime.Today.ToString("dd/MM/yyyy"),
+        "month" => DateTime.Today.ToString("MMMM yyyy"),
+        "total" => "todos os pedidos",
+        _       => _customDate.ToString("dd/MM/yyyy"),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allOrders = await OrderService.ListAsync();
+        _loading   = false;
+        ApplyFilter();
+    }
+
+    private void SetPeriod(string p)
+    {
+        _period = p;
+        ApplyFilter();
+    }
+
+    private void OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateOnly.TryParse(e.Value?.ToString(), out var d))
+        {
+            _customDate = d;
+            _period = "custom";
+            ApplyFilter();
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        _orders = _period switch
+        {
+            "today"  => _allOrders.Where(o => ParseDate(o.CreatedAt).Date == DateTime.Today).ToList(),
+            "month"  => _allOrders.Where(o => ParseDate(o.CreatedAt) is var d && d.Year == DateTime.Today.Year && d.Month == DateTime.Today.Month).ToList(),
+            "custom" => _allOrders.Where(o => DateOnly.FromDateTime(ParseDate(o.CreatedAt).ToLocalTime()) == _customDate).ToList(),
+            _        => _allOrders.ToList(),
+        };
+        ComputeStats();
+    }
+
+    private static DateTime ParseDate(string iso) =>
+        DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
+            ? dt.ToLocalTime()
+            : DateTime.MinValue;
+
+    private void ComputeStats()
+    {
+        var active = _orders.Where(o => o.Status != "cancelado").ToList();
+
+        _revenue       = active.Sum(o => o.Total);
+        _avgTicket     = active.Count > 0 ? _revenue / active.Count : 0;
+        _totalDiscount = active.Sum(o => o.DiscountAmount);
+
+        _byStatus = new()
+        {
+            ("Preparando", _orders.Count(o => o.Status == "preparando"), "mustard"),
+            ("Pronto",     _orders.Count(o => o.Status == "pronto"),     "green"),
+            ("Entregue",   _orders.Count(o => o.Status == "entregue"),   "dark"),
+            ("Cancelado",  _orders.Count(o => o.Status == "cancelado"),  "red"),
+        };
+
+        _topProducts = _orders
+            .SelectMany(o => o.Items)
+            .GroupBy(i => i.Name)
+            .Select(g => (g.Key, g.Count(), g.Sum(i => i.Price)))
+            .OrderByDescending(x => x.Item2)
+            .Take(5)
+            .ToList();
+
+        double maxActive = active.Count > 0 ? active.Count : 1;
+        var fullCombo  = active.Count(o => o.DiscountRate == 0.20m);
+        var sandRefri  = active.Count(o => o.DiscountRate == 0.15m);
+        var sandBat    = active.Count(o => o.DiscountRate == 0.10m);
+        var noDiscount = active.Count(o => o.DiscountRate == 0);
+
+        _comboStats = new()
+        {
+            ("Combo completo (20%)",     fullCombo,  fullCombo  / maxActive * 100),
+            ("Sanduíche + Bebida (15%)", sandRefri,  sandRefri  / maxActive * 100),
+            ("Sanduíche + Batata (10%)", sandBat,    sandBat    / maxActive * 100),
+            ("Sem desconto",             noDiscount, noDiscount / maxActive * 100),
+        };
+
+        _byCategory = _orders
+            .SelectMany(o => o.Items)
+            .GroupBy(i => i.Category switch
+            {
+                Models.Category.Sandwich => "Sanduíches",
+                Models.Category.Side     => "Acompanhamentos",
+                Models.Category.Drink    => "Bebidas",
+                _                        => i.Category.ToString()
+            })
+            .Select(g => (g.Key, g.Count()))
+            .OrderByDescending(x => x.Item2)
+            .ToList();
+    }
+}
