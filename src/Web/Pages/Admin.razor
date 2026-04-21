@@ -1,6 +1,7 @@
 @page "/admin"
 @inject IOrderService OrderService
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>Pedidos · Good Hamburger</PageTitle>
 
@@ -16,12 +17,22 @@
 </div>
 
 <div class="filters">
-    @foreach (var (key, label) in _filters)
+    @foreach (var (key, label) in _statusFilters)
     {
-        <button class="filter-tab @(_filter == key ? "active" : "")"
-                @onclick="() => _filter = key">
+        <button class="filter-tab @(_statusFilter == key ? "active" : "")"
+                @onclick="() => _statusFilter = key">
             @label
-            <span class="count">@CountFor(key)</span>
+            <span class="count">@CountForStatus(key)</span>
+        </button>
+    }
+</div>
+<div class="filters" style="margin-top:6px">
+    @foreach (var (key, label) in _serviceFilters)
+    {
+        <button class="filter-tab @(_serviceFilter == key ? "active" : "")"
+                @onclick="() => _serviceFilter = key">
+            @label
+            <span class="count">@CountForService(key)</span>
         </button>
     }
     <input class="search"
@@ -108,18 +119,27 @@ else
 
 @code {
     private List<OrderDto> _orders = new();
-    private string _filter = "todos";
+    private string _statusFilter  = "todos";
+    private string _serviceFilter = "todos";
     private string _search = "";
     private bool _loading = true;
     private decimal _totalDia;
 
-    private readonly (string, string)[] _filters = new[]
+    private readonly (string Key, string Label)[] _statusFilters =
     {
-        ("todos", "Todos"),
+        ("todos",      "Todos"),
         ("preparando", "Preparando"),
-        ("pronto", "Prontos"),
-        ("entregue", "Entregues"),
-        ("cancelado", "Cancelados"),
+        ("pronto",     "Prontos"),
+        ("entregue",   "Entregues"),
+        ("cancelado",  "Cancelados"),
+    };
+
+    private readonly (string Key, string Label)[] _serviceFilters =
+    {
+        ("todos",     "Todos"),
+        ("Salão",     "🪑 Salão"),
+        ("Retirada",  "🥡 Retirada"),
+        ("Delivery",  "🛵 Delivery"),
     };
 
     protected override async Task OnInitializedAsync()
@@ -129,12 +149,17 @@ else
         _loading = false;
     }
 
-    private int CountFor(string f) => f == "todos"
+    private int CountForStatus(string f) => f == "todos"
         ? _orders.Count
         : _orders.Count(o => o.Status == f);
 
+    private int CountForService(string f) => f == "todos"
+        ? _orders.Count
+        : _orders.Count(o => o.ServiceType == f);
+
     private IEnumerable<OrderDto> Filtered => _orders.Where(o =>
-        (_filter == "todos" || o.Status == _filter) &&
+        (_statusFilter == "todos"  || o.Status      == _statusFilter) &&
+        (_serviceFilter == "todos" || o.ServiceType == _serviceFilter) &&
         (string.IsNullOrEmpty(_search) ||
          o.Id.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
          o.Customer.Contains(_search, StringComparison.OrdinalIgnoreCase))
@@ -152,6 +177,8 @@ else
 
     private async Task DeleteAsync(string id)
     {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Remover este pedido? Esta ação não pode ser desfeita.");
+        if (!confirmed) return;
         await OrderService.DeleteAsync(id);
         _orders = _orders.Where(o => o.Id != id).ToList();
         _totalDia = _orders.Where(o => o.Status != "cancelado").Sum(o => o.Total);

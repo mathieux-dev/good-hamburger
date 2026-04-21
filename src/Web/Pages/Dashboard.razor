@@ -115,13 +115,26 @@ else
             </article>
 
             <article class="order-card">
-                <header><h3 class="display-sm upper">Categorias vendidas</h3></header>
-                <div class="order-items">
-                    @foreach (var (cat, count) in _byCategory)
+                <header><h3 class="display-sm upper">Tipo de atendimento</h3></header>
+                <div class="db-bars" style="margin-bottom:12px">
+                    @foreach (var (label, count, rev, cls) in _byServiceType)
+                    {
+                        var pct = _orders.Count > 0 ? (double)count / _orders.Count * 100 : 0;
+                        <div class="db-bar-row">
+                            <span class="mono small db-bar-label">@label</span>
+                            <div class="db-bar-track">
+                                <div class="db-bar-fill db-bar-@cls" style="width:@pct.ToString("F0")%"></div>
+                            </div>
+                            <span class="mono small">@count</span>
+                        </div>
+                    }
+                </div>
+                <div style="border-top:1px solid var(--line);padding-top:10px">
+                    @foreach (var (label, count, rev, cls) in _byServiceType.Where(x => x.Count > 0))
                     {
                         <div class="order-row">
-                            <span class="condensed">@cat</span>
-                            <span class="mono small">@count un.</span>
+                            <span class="condensed">@label</span>
+                            <span class="mono total-red">@rev.ToString("C")</span>
                         </div>
                     }
                 </div>
@@ -142,10 +155,10 @@ else
     private decimal _revenue;
     private decimal _avgTicket;
     private decimal _totalDiscount;
-    private List<(string Label, int Count, string Cls)>      _byStatus    = new();
-    private List<(string Name,  int Count, decimal Revenue)> _topProducts = new();
-    private List<(string Label, int Count, double Pct)>      _comboStats  = new();
-    private List<(string Cat,   int Count)>                  _byCategory  = new();
+    private List<(string Label, int Count, string Cls)>                    _byStatus      = new();
+    private List<(string Name,  int Count, decimal Revenue)>              _topProducts   = new();
+    private List<(string Label, int Count, double Pct)>                   _comboStats    = new();
+    private List<(string Label, int Count, decimal Revenue, string Cls)>  _byServiceType = new();
 
     private string PeriodLabel => _period switch
     {
@@ -233,17 +246,12 @@ else
             ("Sem desconto",             noDiscount, noDiscount / maxActive * 100),
         };
 
-        _byCategory = _orders
-            .SelectMany(o => o.Items)
-            .GroupBy(i => i.Category switch
+        _byServiceType = new[] { ("🪑 Salão", "Salão", "green"), ("🥡 Retirada", "Retirada", "mustard"), ("🛵 Delivery", "Delivery", "red") }
+            .Select(t =>
             {
-                Models.Category.Sandwich => "Sanduíches",
-                Models.Category.Side     => "Acompanhamentos",
-                Models.Category.Drink    => "Bebidas",
-                _                        => i.Category.ToString()
+                var subset = active.Where(o => o.ServiceType == t.Item2).ToList();
+                return (t.Item1, subset.Count, subset.Sum(o => o.Total), t.Item3);
             })
-            .Select(g => (g.Key, g.Count()))
-            .OrderByDescending(x => x.Item2)
             .ToList();
     }
 }

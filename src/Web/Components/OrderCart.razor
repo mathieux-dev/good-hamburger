@@ -12,11 +12,23 @@
         </div>
     </header>
 
+    @* Seletor de tipo de serviço *@
+    <div class="service-type-row">
+        @foreach (var type in new[] { ("🪑", "Salão"), ("🥡", "Retirada"), ("🛵", "Delivery") })
+        {
+            <button class="service-btn @(_serviceType == type.Item2 ? "active" : "")"
+                    @onclick="() => _serviceType = type.Item2">
+                <span>@type.Item1</span>
+                <span class="service-label">@type.Item2</span>
+            </button>
+        }
+    </div>
+
     <div class="field">
-        <label>Cliente / Mesa</label>
+        <label>@CustomerLabel</label>
         <input class="mono dashed-input"
                @bind="_customer" @bind:event="oninput"
-               placeholder="Mesa 01, Balcão, Delivery..." />
+               placeholder="@CustomerPlaceholder" />
     </div>
 
     @if (!string.IsNullOrEmpty(Error))
@@ -110,6 +122,8 @@
     [Parameter] public EventCallback<string> CustomerChanged { get; set; }
     [Parameter] public string Note { get; set; } = "";
     [Parameter] public EventCallback<string> NoteChanged { get; set; }
+    [Parameter] public string ServiceType { get; set; } = "Salão";
+    [Parameter] public EventCallback<string> ServiceTypeChanged { get; set; }
     [Parameter] public string? Error { get; set; }
     [Parameter] public EventCallback OnDismissError { get; set; }
     [Parameter] public EventCallback<MenuItemDto> OnRemove { get; set; }
@@ -118,7 +132,12 @@
 
     private DiscountCalculator.Summary _summary = new(0, null, 0, 0);
 
-    // Bindings locais (sincronizam com o pai via @bind)
+    private string _serviceType
+    {
+        get => ServiceType;
+        set { ServiceType = value; ServiceTypeChanged.InvokeAsync(value); }
+    }
+
     private string _customer
     {
         get => Customer;
@@ -129,6 +148,20 @@
         get => Note;
         set { Note = value; NoteChanged.InvokeAsync(value); }
     }
+
+    private string CustomerLabel => ServiceType switch
+    {
+        "Retirada" => "Nome do cliente",
+        "Delivery" => "Endereço de entrega",
+        _          => "Mesa / Comanda"
+    };
+
+    private string CustomerPlaceholder => ServiceType switch
+    {
+        "Retirada" => "Ex: João Silva",
+        "Delivery" => "Ex: Rua das Flores, 123",
+        _          => "Ex: Mesa 01, Balcão"
+    };
 
     protected override void OnParametersSet()
     {
