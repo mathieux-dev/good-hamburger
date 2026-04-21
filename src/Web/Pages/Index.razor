@@ -1,22 +1,6 @@
 @page "/"
+@inject NavigationManager Nav
 
-<PageTitle>Good Hamburger · Bom apetite!</PageTitle>
-
-<section class="hero">
-    <div class="hero-tag">EST. 1958 · SÃO PAULO</div>
-    <h1 class="display-huge">Bom apetite!</h1>
-    <p class="hero-sub">
-        Monte seu pedido e aproveite até <b>20% de desconto</b> nos combos.
-        Do balcão pra sua mesa, todo dia.
-    </p>
-    <div class="hero-actions">
-        <a href="/order" class="btn btn-primary">🍔 Fazer pedido</a>
-        <a href="/admin" class="btn btn-ghost">Ver pedidos →</a>
-    </div>
-
-    <div class="combo-preview">
-        <div class="combo-chip">Sanduíche + Batata · <b>10% OFF</b></div>
-        <div class="combo-chip">Sanduíche + Bebida · <b>15% OFF</b></div>
-        <div class="combo-chip hot">Combo Completo · <b>20% OFF</b></div>
-    </div>
-</section>
+@code {
+    protected override void OnInitialized() => Nav.NavigateTo("/order", replace: true);
+}
