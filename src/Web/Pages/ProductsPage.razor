@@ -77,8 +77,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAsync();
-        _loading = false;
+        try { await LoadAsync(); }
+        catch (Exception ex) { _error = $"Erro ao carregar produtos: {ex.Message}"; }
+        finally { _loading = false; }
     }
 
     private async Task LoadAsync() => _products = await ProductService.ListAsync();

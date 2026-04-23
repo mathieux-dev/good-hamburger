@@ -23,16 +23,8 @@ public class ApiClient
 
     public async Task<List<MenuItemDto>> GetMenuAsync(CancellationToken ct = default)
     {
-        try
-        {
-            var menu = await _http.GetFromJsonAsync<List<MenuItemDto>>("api/menu", _jsonOptions, ct);
-            return menu ?? new List<MenuItemDto>();
-        }
-        catch (Exception ex)
-        {
-            _log.LogWarning(ex, "Falha ao consultar cardápio, usando fallback local.");
-            return FallbackMenu();
-        }
+        var menu = await _http.GetFromJsonAsync<List<MenuItemDto>>("api/menu", _jsonOptions, ct);
+        return menu ?? new List<MenuItemDto>();
     }
 
     public async Task<List<OrderDto>> GetOrdersAsync(CancellationToken ct = default)
@@ -85,16 +77,8 @@ public class ApiClient
 
     public async Task<List<MenuItemDto>> GetProductsAsync(CancellationToken ct = default)
     {
-        try
-        {
-            var res = await _http.GetFromJsonAsync<List<MenuItemDto>>("api/products", _jsonOptions, ct);
-            return res ?? new();
-        }
-        catch (Exception ex)
-        {
-            _log.LogWarning(ex, "Falha ao consultar produtos.");
-            return new();
-        }
+        var res = await _http.GetFromJsonAsync<List<MenuItemDto>>("api/products", _jsonOptions, ct);
+        return res ?? new();
     }
 
     public async Task<MenuItemDto> CreateProductAsync(ProductWriteRequest req, CancellationToken ct = default)
@@ -139,14 +123,6 @@ public class ApiClient
         resp.EnsureSuccessStatusCode();
     }
 
-    private static List<MenuItemDto> FallbackMenu() => new()
-    {
-        new("11111111-0000-0000-0000-000000000001", "X Burger",     5.00m, Category.Sandwich, "pão + burger + queijo", "O original.",                "burger"),
-        new("11111111-0000-0000-0000-000000000002", "X Egg",        4.50m, Category.Sandwich, "pão + burger + ovo",    "Gema escorrendo.",            "egg"),
-        new("11111111-0000-0000-0000-000000000003", "X Bacon",      7.00m, Category.Sandwich, "pão + burger + bacon",  "Favorito da casa.",           "bacon"),
-        new("11111111-0000-0000-0000-000000000004", "Batata Frita", 2.00m, Category.Side,     "porção crocante",       "Corte rústico, sal grosso.",  "fries"),
-        new("11111111-0000-0000-0000-000000000005", "Refrigerante", 2.50m, Category.Drink,    "lata 350ml",            "Gelado.",                     "soda"),
-    };
 }
 
 public record ApiError(string Error, string Message, string? Category);
