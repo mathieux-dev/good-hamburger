@@ -50,7 +50,9 @@ if (app.Environment.IsDevelopment())
         options.WithOpenApiRoutePattern("/swagger/v1/swagger.json"));
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
+
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.Run();
