@@ -14,8 +14,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+var connStr = builder.Configuration.GetConnectionString("Default")!;
+// Render provides the connection string as a postgres:// URL; convert to Npgsql key-value format
+if (connStr.StartsWith("postgres://") || connStr.StartsWith("postgresql://"))
+{
+    var uri = new Uri(connStr);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    connStr = $"Host={uri.Host};Port={(uri.Port > 0 ? uri.Port : 5432)};" +
+              $"Database={uri.AbsolutePath.TrimStart('/')};" +
+              $"Username={userInfo[0]};Password={Uri.UnescapeDataString(userInfo[1])};" +
+              "SSL Mode=Require;Trust Server Certificate=true";
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(connStr));
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
