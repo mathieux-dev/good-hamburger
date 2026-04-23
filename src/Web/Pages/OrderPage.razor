@@ -87,8 +87,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _menu = await MenuService.GetMenuAsync();
-        _loading = false;
+        try { _menu = await MenuService.GetMenuAsync(); }
+        catch { _menu = null; }
+        finally { _loading = false; }
 
         if (!string.IsNullOrEmpty(EditId))
         {
