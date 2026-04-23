@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: goodhamburger-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: 8080
+      - key: ConnectionStrings__Default
+        fromDatabase:
+          name: goodhamburger-db
+          property: connectionString
+
+  - type: web
+    name: goodhamburger-web
+    runtime: docker
+    dockerfilePath: ./src/Web/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: 8080
+      - key: GoodHamburger__ApiBaseUrl
+        sync: false  # Preencher no painel do Render após o primeiro deploy da API
+
+databases:
+  - name: goodhamburger-db
+    databaseName: goodhamburger
+    plan: free
