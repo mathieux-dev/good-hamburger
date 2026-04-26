@@ -4,6 +4,7 @@ using GoodHamburger.Application.Products.Handlers;
 using GoodHamburger.Domain.Entities;
 using GoodHamburger.Domain.Enums;
 using GoodHamburger.Domain.Interfaces;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace GoodHamburger.Tests.Unit.Application.Products;
@@ -12,7 +13,7 @@ public class DeleteProductHandlerTests
 {
     private readonly IProductRepository _repo = Substitute.For<IProductRepository>();
 
-    private DeleteProductHandler Handler() => new(_repo);
+    private DeleteProductHandler Handler() => new(_repo, NullLogger<DeleteProductHandler>.Instance);
 
     [Fact]
     public async Task HandleAsync_ShouldFail_WhenProductNotFound()

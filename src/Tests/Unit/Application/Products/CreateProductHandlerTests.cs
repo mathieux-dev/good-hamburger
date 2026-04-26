@@ -3,6 +3,7 @@ using GoodHamburger.Application.Products.Commands;
 using GoodHamburger.Application.Products.Handlers;
 using GoodHamburger.Domain.Entities;
 using GoodHamburger.Domain.Interfaces;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace GoodHamburger.Tests.Unit.Application.Products;
@@ -11,7 +12,7 @@ public class CreateProductHandlerTests
 {
     private readonly IProductRepository _repo = Substitute.For<IProductRepository>();
 
-    private CreateProductHandler Handler() => new(_repo);
+    private CreateProductHandler Handler() => new(_repo, NullLogger<CreateProductHandler>.Instance);
 
     private static CreateProductCommand ValidCommand(string name = "X Burger", decimal price = 5.00m,
         string category = "Sandwich") =>

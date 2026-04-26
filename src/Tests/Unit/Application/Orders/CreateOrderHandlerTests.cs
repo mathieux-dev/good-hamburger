@@ -4,6 +4,7 @@ using GoodHamburger.Application.Orders.Handlers;
 using GoodHamburger.Domain.Entities;
 using GoodHamburger.Domain.Enums;
 using GoodHamburger.Domain.Interfaces;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace GoodHamburger.Tests.Unit.Application.Orders;
@@ -14,7 +15,7 @@ public class CreateOrderHandlerTests
     private readonly IProductRepository _products = Substitute.For<IProductRepository>();
     private readonly IDiscountStrategy[] _strategies = [];
 
-    private CreateOrderHandler Handler() => new(_orders, _products, _strategies);
+    private CreateOrderHandler Handler() => new(_orders, _products, _strategies, NullLogger<CreateOrderHandler>.Instance);
 
     private static Product Sandwich() => new(Guid.NewGuid(), "X Burger",    5.00m, ProductCategory.Sandwich);
     private static Product Side()     => new(Guid.NewGuid(), "Batata Frita",2.00m, ProductCategory.Side);
@@ -83,7 +84,7 @@ public class CreateOrderHandlerTests
             new Domain.Discounts.SandwichDrinkDiscountStrategy(),
             new Domain.Discounts.SandwichSideDiscountStrategy(),
         };
-        var handler = new CreateOrderHandler(_orders, _products, strategies);
+        var handler = new CreateOrderHandler(_orders, _products, strategies, NullLogger<CreateOrderHandler>.Instance);
         var command = new CreateOrderCommand("Test", "", [sandwich.Id, side.Id, drink.Id], "Salão");
 
         var result = await handler.HandleAsync(command);

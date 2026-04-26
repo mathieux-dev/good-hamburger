@@ -3,6 +3,7 @@ using GoodHamburger.Application.Orders.Commands;
 using GoodHamburger.Application.Orders.Handlers;
 using GoodHamburger.Domain.Entities;
 using GoodHamburger.Domain.Interfaces;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace GoodHamburger.Tests.Unit.Application.Orders;
@@ -11,7 +12,7 @@ public class UpdateStatusHandlerTests
 {
     private readonly IOrderRepository _orders = Substitute.For<IOrderRepository>();
 
-    private UpdateStatusHandler Handler() => new(_orders);
+    private UpdateStatusHandler Handler() => new(_orders, NullLogger<UpdateStatusHandler>.Instance);
 
     [Fact]
     public async Task HandleAsync_ShouldFail_WhenOrderNotFound()

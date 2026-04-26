@@ -4,6 +4,7 @@ using GoodHamburger.Application.Products.Handlers;
 using GoodHamburger.Domain.Entities;
 using GoodHamburger.Domain.Enums;
 using GoodHamburger.Domain.Interfaces;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace GoodHamburger.Tests.Unit.Application.Products;
@@ -12,7 +13,7 @@ public class UpdateProductHandlerTests
 {
     private readonly IProductRepository _repo = Substitute.For<IProductRepository>();
 
-    private UpdateProductHandler Handler() => new(_repo);
+    private UpdateProductHandler Handler() => new(_repo, NullLogger<UpdateProductHandler>.Instance);
 
     private static Product ExistingProduct() =>
         Product.Create("X Burger", 5.00m, ProductCategory.Sandwich, "sub", "desc");
