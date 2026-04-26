@@ -4,19 +4,28 @@ using GoodHamburger.Domain.Common;
 using GoodHamburger.Domain.Entities;
 using GoodHamburger.Domain.Enums;
 using GoodHamburger.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace GoodHamburger.Application.Products.Handlers;
 
 public class CreateProductHandler
 {
     private readonly IProductRepository _repo;
+    private readonly ILogger<CreateProductHandler> _logger;
 
-    public CreateProductHandler(IProductRepository repo) => _repo = repo;
+    public CreateProductHandler(IProductRepository repo, ILogger<CreateProductHandler> logger)
+    {
+        _repo = repo;
+        _logger = logger;
+    }
 
     public async Task<Result<ProductDto>> HandleAsync(CreateProductCommand command, CancellationToken ct = default)
     {
         if (!Enum.TryParse<ProductCategory>(command.Category, true, out var category))
+        {
+            _logger.LogWarning("Invalid category '{Category}' when creating product", command.Category);
             return Result<ProductDto>.Failure($"Categoria inválida: '{command.Category}'.");
+        }
 
         if (string.IsNullOrWhiteSpace(command.Name))
             return Result<ProductDto>.Failure("Nome do produto é obrigatório.");
@@ -27,6 +36,9 @@ public class CreateProductHandler
         var product = Product.Create(command.Name.Trim(), command.Price, category,
             command.Subtitle, command.Description, command.ImageUrl);
         await _repo.AddAsync(product, ct);
+
+        _logger.LogInformation("Product {ProductId} '{Name}' created in category {Category} at {Price:C}",
+            product.Id, product.Name, product.Category, product.Price);
 
         return Result<ProductDto>.Success(ToDto(product));
     }
