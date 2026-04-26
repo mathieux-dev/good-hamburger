@@ -1,5 +1,7 @@
 # Good Hamburger — Sistema de Pedidos
 
+[![CI](https://github.com/mathieux-dev/good-hamburger/actions/workflows/ci.yml/badge.svg)](https://github.com/mathieux-dev/good-hamburger/actions/workflows/ci.yml)
+
 Sistema completo de gerenciamento de pedidos para lanchonete: API REST com regras de negócio para combos e descontos automáticos, e frontend Blazor Server para operação do caixa e gestão do cardápio.
 
 ---
@@ -18,6 +20,8 @@ Sistema completo de gerenciamento de pedidos para lanchonete: API REST com regra
 
 **Infraestrutura**
 - Docker / Docker Compose
+- GitHub Actions (CI/CD)
+- Render.com (hospedagem)
 
 ---
 
@@ -46,6 +50,19 @@ dotnet test --filter "FullyQualifiedName~Unit"
 ```
 
 Os testes de integração sobem um container PostgreSQL real via Testcontainers — Docker em execução é necessário.
+
+Cobertura mínima exigida: **90% de linhas** (verificada automaticamente no CI).
+
+---
+
+## CI/CD
+
+O pipeline roda no GitHub Actions a cada push para `main` ou abertura de PR:
+
+1. **build-and-test** — restore, build Release, testes com cobertura, gate de 90%
+2. **deploy** — chama os deploy hooks do Render (somente em push para `main`, após CI verde)
+
+Artifacts de cobertura são publicados como artefatos do workflow.
 
 ---
 
@@ -125,6 +142,12 @@ Cada pedido identifica o canal: **Salão**, **Retirada** ou **Delivery**.
 | PUT    | /api/products/{id}  | Atualizar produto   | 200     |
 | DELETE | /api/products/{id}  | Remover produto     | 204     |
 
+### Infra
+
+| Método | Rota      | Descrição         | Sucesso |
+|--------|-----------|-------------------|---------|
+| GET    | /health   | Health check      | 200     |
+
 ---
 
 ## Arquitetura
@@ -144,20 +167,32 @@ src/
 
 ### Decisões arquiteturais
 
-**Clean Architecture**  
+**Clean Architecture**
 Domínio isolado de frameworks. Lógica de negócio (descontos, validação de duplicatas) vive exclusivamente em `Domain`, sem dependência de EF Core ou ASP.NET.
 
-**Strategy Pattern para descontos**  
+**Strategy Pattern para descontos**
 Cada regra é uma classe independente que implementa `IDiscountStrategy`. Adicionar nova regra = nova classe, sem alterar as existentes. Registradas no DI como `IEnumerable<IDiscountStrategy>` e avaliadas por prioridade (maior combo primeiro).
 
-**Result Pattern**  
+**Result Pattern**
 Erros de negócio retornados como `Result<T>` em vez de exceções. O controller inspeciona `IsSuccess` e escolhe o status HTTP adequado.
 
-**CQRS leve**  
+**CQRS leve**
 Sem MediatR — handlers são classes simples injetadas diretamente nos controllers. Separa leitura de escrita sem dependências externas.
 
-**Soft delete em pedidos**  
+**Soft delete em pedidos**
 `Order` possui `IsDeleted` e `DeletedAt`. Global query filter no EF Core garante que registros deletados nunca apareçam nas queries por padrão.
 
-**Update de itens do pedido**  
+**Update de itens do pedido**
 `OrderRepository.UpdateAsync` deleta explicitamente os `OrderItem` antigos e re-insere os novos em vez de usar `_context.Update()`, evitando conflitos de change tracking do EF Core com coleções substituídas.
+
+---
+
+## O que foi deixado de fora
+
+- **Autenticação/Autorização** — sem JWT ou qualquer camada de auth; todas as rotas são públicas.
+- **Paginação** — listagem de pedidos retorna todos os registros sem cursor ou page/size.
+- **Rate limiting** — nenhum throttle na API.
+- **Cache** — sem Redis; cada request bate direto no banco.
+- **Observabilidade avançada** — logs estruturados estão presentes, mas sem tracing distribuído (OpenTelemetry) ou métricas exportadas.
+- **Mensageria** — fluxo síncrono end-to-end; sem RabbitMQ ou eventos de domínio.
+- **Testes de contrato** — não há testes de schema/contract entre API e frontend.
