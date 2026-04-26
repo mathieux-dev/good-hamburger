@@ -60,7 +60,7 @@ public class ApiClient
         if (!resp.IsSuccessStatusCode)
         {
             var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
-            throw new ApiException(error?.Message ?? "Falha ao criar pedido.", error);
+            throw new ApiException(error?.Resolved ?? "Falha ao criar pedido.", error);
         }
         return (await resp.Content.ReadFromJsonAsync<OrderDto>(_jsonOptions, cancellationToken: ct))!;
     }
@@ -71,7 +71,7 @@ public class ApiClient
         if (!resp.IsSuccessStatusCode)
         {
             var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
-            throw new ApiException(error?.Message ?? "Falha ao atualizar pedido.", error);
+            throw new ApiException(error?.Resolved ?? "Falha ao atualizar pedido.", error);
         }
     }
 
@@ -88,7 +88,7 @@ public class ApiClient
         if (!resp.IsSuccessStatusCode)
         {
             var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
-            throw new ApiException(error?.Message ?? "Falha ao criar produto.", error);
+            throw new ApiException(error?.Resolved ?? "Falha ao criar produto.", error);
         }
         return (await resp.Content.ReadFromJsonAsync<MenuItemDto>(_jsonOptions, cancellationToken: ct))!;
     }
@@ -100,7 +100,7 @@ public class ApiClient
         if (!resp.IsSuccessStatusCode)
         {
             var error = await resp.Content.ReadFromJsonAsync<ApiError>(_jsonOptions, cancellationToken: ct);
-            throw new ApiException(error?.Message ?? "Falha ao atualizar produto.", error);
+            throw new ApiException(error?.Resolved ?? "Falha ao atualizar produto.", error);
         }
         return (await resp.Content.ReadFromJsonAsync<MenuItemDto>(_jsonOptions, cancellationToken: ct))!;
     }
@@ -125,7 +125,10 @@ public class ApiClient
 
 }
 
-public record ApiError(string Error, string Message, string? Category);
+public record ApiError(string? Error, string? Message, string? Category)
+{
+    public string Resolved => Message ?? Error ?? "Erro desconhecido.";
+}
 
 public class ApiException : Exception
 {
